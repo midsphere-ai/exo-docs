@@ -1,0 +1,120 @@
+---
+---
+
+<header class="mobile-navbar">
+  <label for="mobile-drawer-toggle" class="mobile-hamburger" aria-label="Open navigation menu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  </label>
+
+  <a href="/docs" class="mobile-logo" aria-label="Orbiter docs home">
+    <span class="mobile-logo-text">orbiter</span>
+    <span class="mobile-logo-label">docs</span>
+  </a>
+
+  <button type="button" class="mobile-search-btn" data-search-trigger aria-label="Search documentation">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  </button>
+</header>
+
+<style>
+  .mobile-navbar {
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: 3.5rem;
+    padding: 0 0.75rem;
+    background: color-mix(in srgb, var(--zen-paper) 80%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--zen-border);
+  }
+
+  .mobile-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    color: var(--zen-dark);
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  .mobile-hamburger:hover {
+    background: color-mix(in srgb, var(--zen-dark) 6%, transparent);
+  }
+
+  .mobile-hamburger:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+    outline-offset: 2px;
+  }
+
+  .mobile-logo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    margin-left: 0.5rem;
+    flex: 1;
+    text-decoration: none;
+    color: var(--zen-dark);
+  }
+
+  .mobile-logo:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  .mobile-logo-text {
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .mobile-logo-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--zen-muted);
+  }
+
+  .mobile-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    background: none;
+    color: color-mix(in srgb, var(--zen-dark) 60%, transparent);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+  }
+
+  .mobile-search-btn:hover {
+    color: var(--zen-dark);
+    background: color-mix(in srgb, var(--zen-dark) 6%, transparent);
+  }
+
+  .mobile-search-btn:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+    outline-offset: 2px;
+  }
+
+  /* Hide on desktop (md breakpoint = 768px) */
+  @media (min-width: 768px) {
+    .mobile-navbar {
+      display: none;
+    }
+  }
+</style>

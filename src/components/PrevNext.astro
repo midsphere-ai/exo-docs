@@ -1,0 +1,157 @@
+---
+import { buildNavTree, type NavSection } from '../utils/navigation';
+
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+
+// Build nav tree and flatten into ordered list of all pages
+const navTree = await buildNavTree();
+
+interface FlatItem {
+  title: string;
+  href: string;
+  sectionLabel: string;
+}
+
+const flatList: FlatItem[] = [];
+
+function flattenSection(section: NavSection) {
+  for (const item of section.items) {
+    flatList.push({
+      title: item.title,
+      href: item.href,
+      sectionLabel: section.label,
+    });
+  }
+  for (const child of section.children) {
+    flattenChild(child);
+  }
+}
+
+function flattenChild(section: NavSection) {
+  for (const item of section.items) {
+    flatList.push({
+      title: item.title,
+      href: item.href,
+      sectionLabel: section.label,
+    });
+  }
+  for (const child of section.children) {
+    flattenChild(child);
+  }
+}
+
+for (const section of navTree) {
+  flattenSection(section);
+}
+
+// Find current page index
+const currentHref = slug ? `/docs/${slug}` : '/docs';
+const currentIndex = flatList.findIndex((item) => item.href === currentHref);
+
+const prev = currentIndex > 0 ? flatList[currentIndex - 1] : null;
+const next = currentIndex >= 0 && currentIndex < flatList.length - 1 ? flatList[currentIndex + 1] : null;
+---
+
+{(prev || next) && (
+  <nav aria-label="Previous and next pages" class="prev-next">
+    {prev ? (
+      <a href={prev.href} class="prev-next-card prev-card">
+        <span class="direction">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Previous
+        </span>
+        <span class="section-label">{prev.sectionLabel}</span>
+        <span class="page-title">{prev.title}</span>
+      </a>
+    ) : (
+      <div />
+    )}
+    {next ? (
+      <a href={next.href} class="prev-next-card next-card">
+        <span class="direction">
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 6 15 12 9 18" />
+          </svg>
+        </span>
+        <span class="section-label">{next.sectionLabel}</span>
+        <span class="page-title">{next.title}</span>
+      </a>
+    ) : (
+      <div />
+    )}
+  </nav>
+)}
+
+<style>
+  .prev-next {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--zen-border);
+  }
+
+  .prev-next-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem;
+    border: 1px solid var(--zen-border);
+    border-radius: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 300ms, border-color 300ms, box-shadow 300ms;
+  }
+
+  .prev-next-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--zen-dark) 16%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--zen-dark) 6%, transparent);
+  }
+
+  .prev-next-card:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+    outline-offset: 2px;
+  }
+
+  .next-card {
+    text-align: right;
+    align-items: flex-end;
+  }
+
+  .direction {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
+  }
+
+  .section-label {
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
+  }
+
+  .page-title {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--zen-dark);
+  }
+
+  @media (max-width: 639px) {
+    .prev-next {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

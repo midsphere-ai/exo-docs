@@ -1,0 +1,72 @@
+---
+import {
+  generateOrganizationJsonLd,
+  generateTechArticleJsonLd,
+  generateBreadcrumbJsonLd,
+  type BreadcrumbItem,
+} from "../utils/seo";
+
+interface Props {
+  title: string;
+  description?: string;
+  type?: "landing" | "docs";
+  breadcrumbs?: BreadcrumbItem[];
+}
+
+const {
+  title,
+  description = "A modern, modular multi-agent framework for Python.",
+  type = "docs",
+  breadcrumbs = [],
+} = Astro.props;
+
+const siteUrl = Astro.site?.toString().replace(/\/$/, "") || "https://orbiter.dev";
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
+const ogImageUrl = `${siteUrl}/og-image.png`;
+
+const formattedTitle = type === "landing" ? "Orbiter" : `${title} - Orbiter Docs`;
+
+const jsonLdScripts: object[] = [];
+
+if (type === "landing") {
+  jsonLdScripts.push(generateOrganizationJsonLd(siteUrl));
+} else {
+  jsonLdScripts.push(
+    generateTechArticleJsonLd({
+      title,
+      description,
+      url: canonicalUrl,
+    }),
+  );
+}
+
+if (breadcrumbs.length > 0) {
+  jsonLdScripts.push(generateBreadcrumbJsonLd(breadcrumbs, siteUrl));
+}
+---
+
+<title>{formattedTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalUrl} />
+
+<!-- Open Graph -->
+<meta property="og:title" content={formattedTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content={type === "landing" ? "website" : "article"} />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:image" content={ogImageUrl} />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={formattedTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImageUrl} />
+
+<!-- Favicons -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" href="/favicon.ico" />
+
+<!-- JSON-LD -->
+{jsonLdScripts.map((script) => (
+  <script type="application/ld+json" set:html={JSON.stringify(script)} />
+))}

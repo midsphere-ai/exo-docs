@@ -1,0 +1,115 @@
+---
+import { buildNavTree, type NavSection } from '../utils/navigation';
+
+interface Props {
+  slug: string;
+  title: string;
+}
+
+const { slug, title } = Astro.props;
+
+// Build nav tree to look up section/subsection labels
+const navTree = await buildNavTree();
+
+// Create a lookup map from slug to label
+const labelMap = new Map<string, string>();
+function indexSections(sections: NavSection[]) {
+  for (const section of sections) {
+    labelMap.set(section.slug, section.label);
+    for (const item of section.items) {
+      labelMap.set(item.slug, item.title);
+    }
+    indexSections(section.children);
+  }
+}
+indexSections(navTree);
+
+// Build breadcrumb trail from slug segments
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+const crumbs: Crumb[] = [{ label: 'Home', href: '/docs' }];
+
+if (slug) {
+  const segments = slug.split('/');
+  let path = '';
+
+  for (let i = 0; i < segments.length; i++) {
+    path = path ? `${path}/${segments[i]}` : segments[i];
+    const isLast = i === segments.length - 1;
+
+    const label = isLast ? title : (labelMap.get(path) || segments[i].replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
+
+    if (isLast) {
+      crumbs.push({ label });
+    } else {
+      crumbs.push({ label, href: `/docs/${path}` });
+    }
+  }
+}
+---
+
+<nav aria-label="Breadcrumb" class="breadcrumbs">
+  <ol>
+    {crumbs.map((crumb, i) => (
+      <li>
+        {i > 0 && <span class="separator" aria-hidden="true">&gt;</span>}
+        {crumb.href ? (
+          <a href={crumb.href}>{crumb.label}</a>
+        ) : (
+          <span class="current">{crumb.label}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<style>
+  .breadcrumbs {
+    font-size: 0.875rem;
+    color: color-mix(in srgb, var(--zen-dark) 50%, transparent);
+    margin-bottom: 1rem;
+  }
+
+  .breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 0.25rem;
+  }
+
+  .breadcrumbs li {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .separator {
+    color: color-mix(in srgb, var(--zen-dark) 30%, transparent);
+  }
+
+  .breadcrumbs a {
+    color: color-mix(in srgb, var(--zen-dark) 50%, transparent);
+    text-decoration: none;
+    transition: color 200ms;
+  }
+
+  .breadcrumbs a:hover {
+    color: var(--zen-dark);
+  }
+
+  .breadcrumbs a:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+    outline-offset: 2px;
+  }
+
+  .current {
+    color: color-mix(in srgb, var(--zen-dark) 70%, transparent);
+    font-weight: 500;
+  }
+</style>

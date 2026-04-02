@@ -1,0 +1,143 @@
+---
+interface Props {
+  headings: Array<{ depth: number; slug: string; text: string }>;
+}
+
+const { headings } = Astro.props;
+
+const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{tocHeadings.length > 0 && (
+  <nav class="toc" aria-label="Table of contents">
+    <p class="toc-label">On this page</p>
+    <ul class="toc-list">
+      {tocHeadings.map((heading) => (
+        <li class:list={["toc-item", { "toc-item--h3": heading.depth === 3 }]}>
+          <a href={`#${heading.slug}`} class="toc-link" data-toc-link>
+            {heading.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<style>
+  .toc {
+    padding: 1rem 0.75rem;
+  }
+
+  .toc-label {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin: 0;
+  }
+
+  .toc-item--h3 {
+    padding-left: 0.75rem;
+  }
+
+  .toc-link {
+    display: block;
+    font-size: 0.875rem;
+    color: color-mix(in srgb, var(--zen-dark) 50%, transparent);
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+    border-left: 2px solid transparent;
+    transition: color 200ms, border-color 200ms;
+  }
+
+  .toc-link:hover {
+    color: var(--zen-dark);
+  }
+
+  .toc-link:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+    outline-offset: 2px;
+  }
+
+  .toc-link.is-active {
+    color: var(--color-coral);
+    font-weight: 500;
+    border-left-color: var(--color-coral);
+  }
+</style>
+
+<script>
+  function initTocScrollSpy() {
+    const links = document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]');
+    if (links.length === 0) return;
+
+    const headingIds = Array.from(links).map((link) =>
+      link.getAttribute('href')!.slice(1)
+    );
+
+    const headingElements = headingIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (headingElements.length === 0) return;
+
+    let activeId = '';
+
+    function setActive(id: string) {
+      if (id === activeId) return;
+      activeId = id;
+      links.forEach((link) => {
+        const linkId = link.getAttribute('href')!.slice(1);
+        link.classList.toggle('is-active', linkId === id);
+      });
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Find the topmost visible heading
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+
+        if (visible.length > 0) {
+          setActive(visible[0].target.id);
+        }
+      },
+      {
+        rootMargin: '-80px 0px -60% 0px',
+        threshold: 0,
+      }
+    );
+
+    headingElements.forEach((el) => observer.observe(el));
+
+    // Enable smooth scroll on TOC link clicks
+    links.forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('href')!.slice(1);
+        const target = document.getElementById(targetId);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Update URL hash without jumping
+          history.replaceState(null, '', `#${targetId}`);
+        }
+      });
+    });
+  }
+
+  // Run on initial load and on Astro page transitions
+  initTocScrollSpy();
+  document.addEventListener('astro:after-swap', initTocScrollSpy);
+</script>

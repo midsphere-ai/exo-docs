@@ -1,0 +1,12 @@
+spec:
+  name: orbiter-docs
+  static_sites:
+    - name: orbiter-docs
+      git:
+        branch: main
+        repo_clone_url: https://github.com/Midsphere-AI/orbiter-docs.git
+      build_command: npm install && npm run build
+      output_dir: dist
+      environment_slug: node-js
+      routes:
+        - path: /

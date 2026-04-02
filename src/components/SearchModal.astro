@@ -1,0 +1,450 @@
+---
+---
+
+<div id="search-modal" class="search-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Search documentation">
+  <div class="search-backdrop"></div>
+  <div class="search-container">
+    <div class="search-header">
+      <div class="search-input-wrap">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          id="search-input"
+          class="search-input"
+          placeholder="Search documentation..."
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+        <kbd class="search-esc">Esc</kbd>
+      </div>
+    </div>
+    <div id="search-results" class="search-results">
+      <div class="search-empty" id="search-empty">
+        <p>Start typing to search...</p>
+      </div>
+      <div class="search-no-results" id="search-no-results" hidden>
+        <p>No results found</p>
+      </div>
+      <ul id="search-results-list" class="search-results-list" role="listbox" aria-label="Search results"></ul>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    var pagefind = null;
+    var debounceTimer = null;
+    var activeIndex = -1;
+
+    function getModal() {
+      return document.getElementById('search-modal');
+    }
+
+    function getInput() {
+      return document.getElementById('search-input');
+    }
+
+    function getResultsList() {
+      return document.getElementById('search-results-list');
+    }
+
+    async function loadPagefind() {
+      if (pagefind) return pagefind;
+      try {
+        pagefind = await import('/pagefind/pagefind.js');
+        await pagefind.init();
+        return pagefind;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function openSearch() {
+      var modal = getModal();
+      var input = getInput();
+      if (!modal || !input) return;
+      modal.setAttribute('aria-hidden', 'false');
+      modal.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+      input.focus();
+      loadPagefind();
+    }
+
+    function closeSearch() {
+      var modal = getModal();
+      var input = getInput();
+      if (!modal) return;
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      if (input) {
+        input.value = '';
+      }
+      clearResults();
+      activeIndex = -1;
+    }
+
+    function clearResults() {
+      var list = getResultsList();
+      var empty = document.getElementById('search-empty');
+      var noResults = document.getElementById('search-no-results');
+      if (list) list.innerHTML = '';
+      if (empty) empty.hidden = false;
+      if (noResults) noResults.hidden = true;
+    }
+
+    function highlightResult(index) {
+      var list = getResultsList();
+      if (!list) return;
+      var items = list.querySelectorAll('[role="option"]');
+      for (var i = 0; i < items.length; i++) {
+        if (i === index) {
+          items[i].classList.add('is-active');
+          items[i].setAttribute('aria-selected', 'true');
+          items[i].scrollIntoView({ block: 'nearest' });
+        } else {
+          items[i].classList.remove('is-active');
+          items[i].removeAttribute('aria-selected');
+        }
+      }
+      var input = getInput();
+      if (input && index >= 0 && items[index]) {
+        input.setAttribute('aria-activedescendant', items[index].id);
+      } else if (input) {
+        input.removeAttribute('aria-activedescendant');
+      }
+    }
+
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    async function doSearch(query) {
+      var list = getResultsList();
+      var empty = document.getElementById('search-empty');
+      var noResults = document.getElementById('search-no-results');
+      if (!list || !empty || !noResults) return;
+
+      if (!query.trim()) {
+        clearResults();
+        return;
+      }
+
+      var pf = await loadPagefind();
+      if (!pf) {
+        empty.hidden = true;
+        noResults.hidden = false;
+        noResults.querySelector('p').textContent = 'Search is not available. Run a production build first.';
+        return;
+      }
+
+      var search;
+      try {
+        search = await pf.search(query);
+      } catch (e) {
+        empty.hidden = true;
+        noResults.hidden = false;
+        noResults.querySelector('p').textContent = 'Search error. Please try again.';
+        return;
+      }
+
+      var results = await Promise.all(
+        search.results.slice(0, 8).map(function (r) { return r.data(); })
+      );
+
+      list.innerHTML = '';
+      empty.hidden = true;
+      activeIndex = -1;
+
+      if (results.length === 0) {
+        noResults.hidden = false;
+        noResults.querySelector('p').textContent = 'No results found';
+        return;
+      }
+
+      noResults.hidden = true;
+
+      results.forEach(function (result, i) {
+        var li = document.createElement('li');
+        li.setAttribute('role', 'option');
+        li.id = 'search-result-' + i;
+        li.className = 'search-result-item';
+
+        var url = result.url || '';
+        var title = (result.meta && result.meta.title) || result.url || 'Untitled';
+        var excerpt = result.excerpt || '';
+
+        // Build breadcrumb from URL path
+        var pathParts = url.replace(/^\/docs\//, '').replace(/\/$/, '').split('/');
+        var breadcrumb = pathParts.slice(0, -1).map(function (p) {
+          return p.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        }).join(' \u203A ');
+
+        li.innerHTML =
+          '<a href="' + escapeHtml(url) + '" class="search-result-link" tabindex="-1">' +
+            '<span class="search-result-title">' + escapeHtml(title) + '</span>' +
+            (breadcrumb ? '<span class="search-result-breadcrumb">' + escapeHtml(breadcrumb) + '</span>' : '') +
+            '<span class="search-result-excerpt">' + excerpt + '</span>' +
+          '</a>';
+
+        li.addEventListener('click', function () {
+          closeSearch();
+        });
+
+        list.appendChild(li);
+      });
+    }
+
+    function initSearch() {
+      // Search trigger buttons (sidebar + mobile navbar)
+      document.querySelectorAll('[data-search-trigger]').forEach(function(trigger) {
+        if (trigger.dataset.searchInit) return;
+        trigger.dataset.searchInit = 'true';
+        trigger.addEventListener('click', openSearch);
+      });
+
+      // Backdrop close
+      var modal = getModal();
+      var backdrop = modal && modal.querySelector('.search-backdrop');
+      if (backdrop && !backdrop.dataset.searchInit) {
+        backdrop.dataset.searchInit = 'true';
+        backdrop.addEventListener('click', closeSearch);
+      }
+
+      // Input handler with debounce
+      var input = getInput();
+      if (input && !input.dataset.searchInit) {
+        input.dataset.searchInit = 'true';
+        input.addEventListener('input', function () {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(function () {
+            doSearch(input.value);
+          }, 150);
+        });
+      }
+    }
+
+    // Keyboard shortcut (registered once globally)
+    document.addEventListener('keydown', function (e) {
+      // Cmd+K / Ctrl+K to open/close
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        var modal = getModal();
+        if (modal && modal.classList.contains('is-open')) {
+          closeSearch();
+        } else {
+          openSearch();
+        }
+        return;
+      }
+
+      // Only handle remaining keys when modal is open
+      var modal = getModal();
+      if (!modal || !modal.classList.contains('is-open')) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeSearch();
+        return;
+      }
+
+      var list = getResultsList();
+      if (!list) return;
+      var items = list.querySelectorAll('[role="option"]');
+      var count = items.length;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex = count > 0 ? (activeIndex + 1) % count : -1;
+        highlightResult(activeIndex);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex = count > 0 ? (activeIndex - 1 + count) % count : -1;
+        highlightResult(activeIndex);
+      } else if (e.key === 'Enter' && activeIndex >= 0 && items[activeIndex]) {
+        e.preventDefault();
+        var link = items[activeIndex].querySelector('a');
+        if (link) {
+          closeSearch();
+          window.location.href = link.getAttribute('href') || '';
+        }
+      }
+    });
+
+    initSearch();
+    document.addEventListener('astro:after-swap', initSearch);
+  })();
+</script>
+
+<style>
+  .search-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 15vh;
+  }
+
+  .search-overlay.is-open {
+    display: flex;
+  }
+
+  .search-backdrop {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, var(--zen-dark) 20%, transparent);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .search-container {
+    position: relative;
+    width: 100%;
+    max-width: 36rem;
+    margin: 0 1rem;
+    background: var(--zen-paper);
+    border: 1px solid var(--zen-border);
+    border-radius: 0.75rem;
+    box-shadow:
+      0 25px 50px -12px color-mix(in srgb, var(--zen-dark) 25%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--zen-dark) 5%, transparent);
+    overflow: hidden;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Full-screen on mobile */
+  @media (max-width: 639px) {
+    .search-overlay {
+      padding-top: 0;
+      align-items: stretch;
+    }
+
+    .search-container {
+      max-width: none;
+      max-height: 100vh;
+      margin: 0;
+      border-radius: 0;
+      border: none;
+    }
+  }
+
+  .search-header {
+    border-bottom: 1px solid var(--zen-border);
+    flex-shrink: 0;
+  }
+
+  .search-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .search-icon {
+    flex-shrink: 0;
+    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
+  }
+
+  .search-input {
+    flex: 1;
+    border: none;
+    background: none;
+    color: var(--zen-dark);
+    font-size: 1.0625rem;
+    font-family: inherit;
+    font-weight: 500;
+    outline: none;
+  }
+
+  .search-input::placeholder {
+    color: color-mix(in srgb, var(--zen-dark) 35%, transparent);
+  }
+
+  .search-esc {
+    flex-shrink: 0;
+    font-family: inherit;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
+    background: color-mix(in srgb, var(--zen-dark) 6%, transparent);
+    border: 1px solid var(--zen-border);
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    line-height: 1.4;
+  }
+
+  .search-results {
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .search-empty,
+  .search-no-results {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
+    font-size: 0.9375rem;
+  }
+
+  .search-results-list {
+    list-style: none;
+    margin: 0;
+    padding: 0.5rem;
+  }
+
+  /* Dynamic elements created by JS need :global() to bypass Astro scoping */
+  .search-results-list :global(.search-result-item) {
+    border-radius: 0.5rem;
+    transition: background-color 100ms;
+  }
+
+  .search-results-list :global(.search-result-item.is-active),
+  .search-results-list :global(.search-result-item:hover) {
+    background: color-mix(in srgb, var(--zen-dark) 5%, transparent);
+  }
+
+  .search-results-list :global(.search-result-link) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 0.75rem;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .search-results-list :global(.search-result-title) {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--zen-dark);
+  }
+
+  .search-results-list :global(.search-result-breadcrumb) {
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--zen-dark) 45%, transparent);
+  }
+
+  .search-results-list :global(.search-result-excerpt) {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--zen-dark) 60%, transparent);
+  }
+
+  /* Pagefind highlight marks */
+  .search-results-list :global(.search-result-excerpt mark) {
+    background: color-mix(in srgb, var(--color-coral) 20%, transparent);
+    color: var(--color-coral);
+    border-radius: 0.125rem;
+    padding: 0 0.125rem;
+  }
+</style>

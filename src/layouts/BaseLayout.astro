@@ -1,0 +1,129 @@
+---
+import SEOHead from '../components/SEOHead.astro';
+import SearchModal from '../components/SearchModal.astro';
+import type { BreadcrumbItem } from '../utils/seo';
+
+interface Props {
+  title: string;
+  description?: string;
+  pageType?: 'landing' | 'docs';
+  breadcrumbs?: BreadcrumbItem[];
+}
+
+const { title, description, pageType = 'docs', breadcrumbs = [] } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <SEOHead title={title} description={description} type={pageType} breadcrumbs={breadcrumbs} />
+
+    <style is:global>
+      @import "../styles/global.css";
+    </style>
+
+    <script is:inline>
+      (function () {
+        var theme = localStorage.getItem("theme");
+        if (!theme) {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+
+    <noscript>
+      <style>
+        [data-animate] { opacity: 1 !important; }
+        .code-copy-btn { display: none !important; }
+        @media (prefers-color-scheme: dark) {
+          :root {
+            --zen-paper: #1f1f1f !important;
+            --zen-dark: #d1cfc0 !important;
+            --zen-muted: #6b6960 !important;
+            --zen-subtle: #2a2a28 !important;
+            --zen-border: #2e2e2e !important;
+            --zen-card: #161616 !important;
+          }
+          .code-block pre span { color: var(--shiki-dark) !important; }
+        }
+      </style>
+    </noscript>
+  </head>
+  <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-paper focus:text-dark focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-coral/50 focus:ring-offset-2 focus:ring-offset-paper">
+      Skip to content
+    </a>
+
+    <slot />
+
+    <footer class="site-footer">
+      <p>Made with ❤️ by Midsphere Team</p>
+    </footer>
+
+    <SearchModal />
+
+    <script>
+      function initCopyButtons() {
+        document.querySelectorAll<HTMLButtonElement>('.code-copy-btn').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const block = btn.closest('.code-block');
+            if (!block) return;
+            const pre = block.querySelector('pre');
+            if (!pre) return;
+            const code = pre.textContent || '';
+            try {
+              await navigator.clipboard.writeText(code);
+              btn.classList.add('is-copied');
+              setTimeout(() => btn.classList.remove('is-copied'), 2000);
+            } catch {
+              // Fallback: silently fail if clipboard API unavailable
+            }
+          });
+        });
+      }
+      initCopyButtons();
+      document.addEventListener('astro:after-swap', initCopyButtons);
+    </script>
+
+    <script>
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          threshold: 0.05,
+          rootMargin: "0px 0px -40px 0px",
+        }
+      );
+
+      document.querySelectorAll("[data-animate]").forEach((el) => {
+        observer.observe(el);
+      });
+    </script>
+  </body>
+</html>
+
+<style>
+  .site-footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 0.875rem;
+    color: var(--zen-muted);
+    border-top: 1px solid var(--zen-border);
+  }
+
+  .site-footer p {
+    margin: 0;
+  }
+</style>

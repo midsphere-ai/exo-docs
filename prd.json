@@ -1,0 +1,747 @@
+{
+  "project": "Orbiter Docs",
+  "branchName": "ralph/orbiter-docs-site",
+  "description": "Complete documentation site for the Orbiter Python multi-agent framework. 153 markdown files served via Astro 5 with warm parchment design system, animated orbital illustrations, Pagefind search, and zero framework JS.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Install dependencies and configure Astro with Tailwind v4",
+      "description": "As a developer, I need the project bootstrapped with all required dependencies so that Astro, Tailwind CSS v4, and TypeScript are properly configured.",
+      "acceptanceCriteria": [
+        "package.json includes: astro@^5.17, @tailwindcss/vite@^4, tailwindcss@^4, @astrojs/sitemap@^3, @fontsource-variable/bricolage-grotesque@^5, clsx@^2, tailwind-merge@^2",
+        "package.json devDependencies include: typescript@^5, pagefind@^1",
+        "astro.config.mjs configures Tailwind v4 via vite.plugins: [tailwindcss()] (NOT the older @astrojs/tailwind)",
+        "astro.config.mjs includes @astrojs/sitemap integration",
+        "tsconfig.json extends astro/tsconfigs/strict",
+        "npm run dev starts the dev server without errors",
+        "npm run build produces output in dist/",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create global CSS with design system color tokens and font faces",
+      "description": "As a developer, I need the design system's color tokens, font faces, and Tailwind theme mapping defined so all components share a consistent visual language.",
+      "acceptanceCriteria": [
+        "src/styles/global.css exists with @import 'tailwindcss' and @import '@fontsource-variable/bricolage-grotesque'",
+        "CSS custom properties defined: --zen-paper (#f2f0e3 light / #1f1f1f dark), --zen-dark (#2e2e2e light / #d1cfc0 dark), --zen-muted, --zen-subtle",
+        "[data-theme='dark'] overrides all custom properties to dark mode values",
+        "@theme {} block maps tokens to Tailwind: paper, dark, coral (#F76F53), zen-blue (#6287f5), zen-green (#63f78b), muted, subtle",
+        "@font-face declarations for Junicode Roman and Italic (woff2 files in public/fonts/)",
+        "Body defaults: font-family Bricolage Grotesque, font-weight 500, bg-paper, text-dark",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Junicode woff2 files must be placed in public/fonts/ manually or downloaded. Use placeholder files if not available."
+    },
+    {
+      "id": "US-003",
+      "title": "Add animation keyframes and prose styles to global CSS",
+      "description": "As a developer, I need animation keyframes, stagger delays, reduced-motion support, and markdown prose styles so scroll animations and rendered content look correct.",
+      "acceptanceCriteria": [
+        "@keyframes defined in global.css: zenReveal (blur+translateY+opacity), zenFade (blur+opacity), zenScale (blur+scale+opacity), heroEntrance",
+        "Stagger delay CSS: [data-delay='1'] through [data-delay='6'] with 0.15s increments",
+        "@media (prefers-reduced-motion: reduce) resets all animations to final state",
+        "Prose styles scoped under .prose class: paragraphs (text-dark/80 leading-relaxed), inline code (bg-dark/[0.06] rounded-md), links (text-coral with underline), bold, blockquotes (border-l-2 border-coral/40), tables, lists",
+        "section-divider class adds ::before pseudo-element gradient line (transparent to --zen-dark at 8% opacity to transparent)",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Create cn() merge utility",
+      "description": "As a developer, I need a class-name merge utility so components can accept class props without Tailwind conflicts.",
+      "acceptanceCriteria": [
+        "src/utils/merge.ts exports a cn() function that wraps clsx + tailwind-merge",
+        "cn('px-4', 'px-6') returns 'px-6' (tailwind-merge resolves conflicts)",
+        "cn('text-red-500', undefined, false, 'font-bold') returns 'text-red-500 font-bold' (clsx filters falsy)",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Create BaseLayout with theme detection and animation observer",
+      "description": "As a user, I need a consistent HTML shell that handles theme detection before first paint and triggers scroll-based animations.",
+      "acceptanceCriteria": [
+        "src/layouts/BaseLayout.astro renders <!DOCTYPE html>, <html lang='en' data-theme='light'>, <head>, <body>",
+        "<head> includes: global.css import, font preloads for Bricolage Grotesque, meta viewport",
+        "Blocking inline <script> in <head> reads localStorage theme, falls back to prefers-color-scheme, defaults to light, sets data-theme on <html>",
+        "Body contains <script> that creates IntersectionObserver for [data-animate] elements (threshold 0.05, rootMargin -40px bottom), adds is-visible class, unobserves",
+        "Skip-to-content link: <a href='#main-content' class='sr-only focus:not-sr-only'>Skip to content</a>",
+        "Props interface accepts title: string and description?: string",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Configure content collection with glob loader for docs-source",
+      "description": "As a developer, I need Astro Content Collections configured to read markdown files from docs-source/ so docs stay in sync without file copying.",
+      "acceptanceCriteria": [
+        "src/content.config.ts defines a docs collection using glob({ pattern: '**/*.md', base: './docs-source' })",
+        "Schema uses z.object() with all optional fields: title (string), description (string), order (number), category (string), draft (boolean default false)",
+        "getCollection('docs') returns entries for all markdown files in docs-source/",
+        "Entry IDs match file paths: docs-source/guides/agents.md produces an entry referencing that file",
+        "Files without frontmatter parse successfully (all schema fields optional)",
+        "Dev server hot-reloads when a file in docs-source/ is modified",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Create remark plugin for title extraction from first heading",
+      "description": "As a developer, I need titles extracted from the first # heading so pages without frontmatter titles display correctly.",
+      "acceptanceCriteria": [
+        "src/plugins/remark-extract-title.ts finds the first # heading node in the markdown AST",
+        "Extracted title injected into file.data.astro.frontmatter.title",
+        "The # heading node is removed from the AST (layout renders title separately)",
+        "Files with a frontmatter title field are NOT overridden",
+        "Files without any # heading still build without error (title falls back to slug-based name)",
+        "Plugin registered in astro.config.mjs under markdown.remarkPlugins",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Create remark plugin for markdown link rewriting",
+      "description": "As a user, I need internal .md links between docs to resolve to correct site routes.",
+      "acceptanceCriteria": [
+        "src/plugins/remark-rewrite-links.ts processes all link nodes in the markdown AST",
+        "Relative .md links rewritten to absolute site routes: concepts.md in getting-started/quickstart.md becomes /docs/getting-started/concepts",
+        "Parent-relative links work: ../guides/context/index.md becomes /docs/guides/context",
+        "index.md references stripped to directory path",
+        "External URLs (https://...) left unchanged",
+        "Anchor-only links (#section) left unchanged",
+        "Plugin registered in astro.config.mjs under markdown.remarkPlugins",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Create remark plugin for callout/admonition blocks",
+      "description": "As a docs author, I need > [!TIP], > [!INFO], > [!WARNING], > [!DANGER] blockquotes to render as styled callout boxes.",
+      "acceptanceCriteria": [
+        "src/plugins/remark-callouts.ts converts GitHub-flavored alert blockquotes into custom HTML with data-callout-type attribute",
+        "Four types supported: tip, info, warning, danger",
+        "Output HTML has: wrapper div with data-callout-type, icon SVG, label text, content",
+        "Plugin registered in astro.config.mjs under markdown.remarkPlugins",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Style callout blocks with CSS",
+      "description": "As a user, I need callout blocks to be visually styled with color-coded accents matching the design system.",
+      "acceptanceCriteria": [
+        "CSS in global.css styles [data-callout-type] elements",
+        "tip: zen-green left border (3px), bg-zen-green/[0.06], lightbulb SVG icon",
+        "info: zen-blue left border, bg-zen-blue/[0.06], info circle SVG icon",
+        "warning: coral left border, bg-coral/[0.06], warning triangle SVG icon",
+        "danger: red left border, bg-red-500/[0.06], X circle SVG icon",
+        "All callouts: rounded-lg, icon + label header row, content below",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Create dynamic docs route rendering all pages",
+      "description": "As a user, I need every markdown file in docs-source/ accessible as a web page under /docs/.",
+      "acceptanceCriteria": [
+        "src/pages/docs/[...slug].astro exists with getStaticPaths() mapping all docs collection entries to routes",
+        "docs-source/getting-started/quickstart.md accessible at /docs/getting-started/quickstart",
+        "docs-source/guides/context/state.md accessible at /docs/guides/context/state",
+        "docs-source/index.md accessible at /docs (root index)",
+        "Each page renders markdown content with .prose class styling",
+        "npm run build produces HTML files in dist/docs/ with zero errors",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Build navigation tree utility from collection entries",
+      "description": "As a developer, I need a utility that generates a hierarchical nav tree for the sidebar.",
+      "acceptanceCriteria": [
+        "src/utils/navigation.ts exports buildNavTree() async function returning NavSection[]",
+        "NavSection interface: { slug, label, order, items: NavItem[], children: NavSection[] }",
+        "NavItem interface: { slug, title, order, href }",
+        "Top-level sections ordered: Getting Started (1), Guides (2), Architecture (3), Reference (4), Contributing (5), Other (6)",
+        "Section labels derived from index.md titles when available, otherwise from directory names (title-cased)",
+        "Items within sections sorted by frontmatter order first, then alphabetically",
+        "Nested subsections work: guides/context/ appears as child of Guides",
+        "index.md files not listed as separate nav items",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Create DocsLayout with three-column responsive grid",
+      "description": "As a user, I need a docs layout with left sidebar, center content, and right TOC column.",
+      "acceptanceCriteria": [
+        "src/layouts/DocsLayout.astro wraps BaseLayout and renders: sidebar area (left), main content (center), TOC area (right)",
+        "CSS grid: grid-template-columns 256px 1fr 200px at xl, 240px 1fr at lg, 1fr below lg",
+        "Sidebar column sticky with overflow-y-auto and max-h-[calc(100vh-var(--navbar-height))]",
+        "TOC column hidden below xl breakpoint",
+        "Sidebar column hidden below lg breakpoint",
+        "Content area has .prose class and max-w-3xl mx-auto",
+        "<main id='main-content'> landmark wraps content slot",
+        "Props: title, headings, slug",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Create Sidebar component with collapsible sections",
+      "description": "As a user, I need a sidebar showing all docs sections as collapsible groups with current page highlighted.",
+      "acceptanceCriteria": [
+        "src/components/Sidebar.astro renders NavSection[] tree as nested <nav> with <details> per section",
+        "Current section's <details> is open by default",
+        "Current page highlighted: bg-coral/10 text-coral font-medium with 2px left coral border",
+        "Section labels: text-[11px] uppercase tracking-[0.15em] text-dark/40 font-semibold",
+        "Nav items: text-sm text-dark/70 hover:text-dark py-1.5 pl-3 with border-l border-dark/[0.06]",
+        "Nested subsections render as indented child groups",
+        "aria-current='page' set on active link",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Create mobile sidebar drawer",
+      "description": "As a mobile user, I need a sidebar that opens as a left-sliding drawer overlay.",
+      "acceptanceCriteria": [
+        "Hamburger button visible below lg breakpoint, top-left in docs layout",
+        "CSS-only toggle using hidden checkbox + peer modifier",
+        "Drawer slides from left with 300ms transition",
+        "Backdrop overlay: bg-dark/30 backdrop-blur-sm, dismisses on click",
+        "Drawer contains full Sidebar component",
+        "Minimal scoped <script> closes drawer on navigation link click",
+        "aria-expanded attribute on hamburger button reflects state",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Create Breadcrumbs component",
+      "description": "As a user, I need breadcrumb navigation above docs content showing my location in the hierarchy.",
+      "acceptanceCriteria": [
+        "src/components/Breadcrumbs.astro renders: Home > Section > Subsection > Current Page",
+        "Path derived from current slug (e.g. guides/context/state becomes Home > Guides > Context Engine > State)",
+        "All items except last are clickable links",
+        "Last item: text-dark/70 font-medium, not a link",
+        "Separator: > in text-dark/30, overall text-sm text-dark/50",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Create Table of Contents component with scroll-spy",
+      "description": "As a user on a long docs page, I need a right-side TOC that highlights the section I'm reading.",
+      "acceptanceCriteria": [
+        "src/components/TableOfContents.astro accepts headings array from entry.render()",
+        "Renders h2 and h3 headings as nested list with anchor links",
+        "'On this page' label: text-[11px] uppercase tracking-[0.15em] text-dark/40 font-semibold",
+        "Links: text-sm text-dark/50 hover:text-dark, h3 indented with pl-3",
+        "Vanilla <script> IntersectionObserver highlights currently visible heading",
+        "Active heading: text-coral font-medium with border-l-2 border-coral",
+        "Smooth scroll on click",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Create Prev/Next navigation component",
+      "description": "As a user finishing a docs page, I need prev/next links to continue reading sequentially.",
+      "acceptanceCriteria": [
+        "src/components/PrevNext.astro renders Previous (left) and Next (right) cards",
+        "Navigation is context-aware within current section",
+        "Each card shows: section label (small text), page title, directional arrow",
+        "Cards: border border-dark/[0.08] rounded-xl p-4 hover:-translate-y-0.5 with 300ms transition",
+        "First page shows only Next; last page shows only Previous",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Create Navbar component",
+      "description": "As a user, I need a sticky top nav with logo, section links, theme toggle, search trigger, and GitHub link.",
+      "acceptanceCriteria": [
+        "src/components/Navbar.astro renders 3-column grid: logo left, nav center, actions right",
+        "Container: max-w-7xl mx-auto, sticky top, backdrop-blur-sm bg-paper/80, border-b border-dark/[0.04]",
+        "Logo: Orbiter wordmark linking to /",
+        "Nav links: Getting Started (/docs/getting-started), Guides (/docs/guides), API Reference (/docs/reference), GitHub (https://github.com/Midsphere-AI/orbiter-ai)",
+        "Right actions: search trigger button (magnifying glass icon), theme toggle (sun/moon), GitHub icon",
+        "Theme toggle swaps data-theme, persists to localStorage, updates icon",
+        "Desktop nav hidden below lg; hamburger shown below lg",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Create Footer component",
+      "description": "As a user, I need a site footer with docs links, community resources, and decorative elements.",
+      "acceptanceCriteria": [
+        "src/components/Footer.astro renders with inverted colors: bg-dark text-paper",
+        "Link columns (2-col mobile, 3-col desktop): Documentation, Community, Resources",
+        "Documentation links: Getting Started, Guides, API Reference, Architecture",
+        "Community links: GitHub, Contributing",
+        "Resources links: Changelog, Migration Guide",
+        "Orbiter wordmark + copyright year",
+        "Decorative concentric circle rings (paper-colored borders at 18% opacity) bottom-right, hidden on mobile",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 20,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Create Button and Card UI components",
+      "description": "As a developer, I need polymorphic Button and Card components for consistent CTAs and content containers.",
+      "acceptanceCriteria": [
+        "src/components/ui/Button.astro: renders <a> if href, <button> otherwise",
+        "Button variants: isPrimary (bg-dark text-paper shadow-lg), isBordered (border-2 border-dark/80 fills on hover), default (bg-subtle)",
+        "Button: rounded-xl, hover:scale-[1.02] active:scale-[0.98], 200ms transition",
+        "src/components/ui/Card.astro: accepts as prop (div/article/a)",
+        "Card base: rounded-xl bg-subtle/80 border border-dark/[0.08]",
+        "Card hover: -translate-y-0.5, increased border opacity, subtle shadow, 300ms transition",
+        "Both accept class prop merged via cn()",
+        "Typecheck passes"
+      ],
+      "priority": 21,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Style code blocks with window chrome header",
+      "description": "As a user, I need syntax-highlighted code blocks with a window-chrome header (three dots + language name).",
+      "acceptanceCriteria": [
+        "Shiki syntax highlighting configured in astro.config.mjs",
+        "CSS or rehype plugin wraps <pre> blocks: window chrome header with three dots (coral/blue/green at 40% opacity) and language label",
+        "Code block container: rounded-xl overflow-hidden border border-dark/[0.06]",
+        "Light mode background: warm-tinted bg-dark/[0.04]",
+        "Dark mode background: bg-[#161616]",
+        "Horizontal scroll for long lines",
+        "<pre> has tabindex='0' and role='region' with aria-label",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 22,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Add copy-to-clipboard button on code blocks",
+      "description": "As a user, I need a copy button on code blocks so I can quickly copy code examples.",
+      "acceptanceCriteria": [
+        "Copy button appears on hover, top-right of code block",
+        "Clicking copies code content to clipboard via navigator.clipboard.writeText()",
+        "Button shows checkmark icon for 2 seconds after successful copy, then reverts to copy icon",
+        "Button is keyboard-accessible (focusable, activates on Enter)",
+        "Vanilla <script>, no framework JS",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 23,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Create SEOHead component",
+      "description": "As a search engine, I need proper meta tags, OG tags, and JSON-LD on every page.",
+      "acceptanceCriteria": [
+        "src/components/SEOHead.astro generates: <title>, <meta name='description'>, canonical URL",
+        "Open Graph tags: og:title, og:description, og:type, og:url, og:image",
+        "Twitter card: twitter:card=summary_large_image",
+        "Title format: {page title} - Orbiter Docs (landing: just Orbiter)",
+        "src/utils/seo.ts exports JSON-LD generators: Organization (landing), TechArticle (docs), BreadcrumbList (all)",
+        "@astrojs/sitemap generates sitemap.xml at build",
+        "Typecheck passes"
+      ],
+      "priority": 24,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Create LandingLayout",
+      "description": "As a developer, I need a landing page layout without sidebar/TOC for the marketing-style home page.",
+      "acceptanceCriteria": [
+        "src/layouts/LandingLayout.astro wraps BaseLayout with Navbar at top, content slot, Footer at bottom",
+        "No sidebar, no TOC columns",
+        "Content sections use section.section-divider pattern with mx-auto max-w-6xl px-4 sm:px-6 lg:px-8",
+        "Typecheck passes"
+      ],
+      "priority": 25,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Create OrbiterHero animated orbital illustration",
+      "description": "As a visitor, I need an animated CSS illustration of orbiting agents that communicates the framework concept.",
+      "acceptanceCriteria": [
+        "src/components/illustrations/OrbiterHero.astro renders CSS-only animated illustration",
+        "Central circle representing core agent with subtle pulsing glow",
+        "3 concentric orbital rings at increasing radii (border-dark/[0.12])",
+        "Small circles orbiting along rings at different speeds (CSS @keyframes rotate), colored coral/zen-blue/zen-green",
+        "prefers-reduced-motion: orbiters at fixed positions, no rotation",
+        "All colors use CSS custom properties (theme-aware)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 26,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Create landing page Hero section",
+      "description": "As a visitor evaluating Orbiter, I need a hero with the framework name, tagline, CTAs, and a code example overlaying the orbital illustration.",
+      "acceptanceCriteria": [
+        "src/components/landing/Hero.astro renders: headline, subheadline, CTA buttons, code card, OrbiterHero illustration behind",
+        "Headline: 'Orbiter' in Junicode font, text-6xl sm:text-7xl lg:text-8xl",
+        "Subheadline: 'A modern, modular multi-agent framework for Python' in Bricolage Grotesque, text-xl text-dark/60",
+        "CTA buttons: 'Get Started' (primary, /docs/getting-started/) and 'View on GitHub' (bordered, https://github.com/Midsphere-AI/orbiter-ai)",
+        "Code card: quickstart weather agent example in window-chrome block",
+        "Hero entrance: staggered heroEntrance keyframes (0.6s, children staggered 0.15s)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 27,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Create landing page Feature Cards section",
+      "description": "As a visitor, I need 6 feature cards showing Orbiter's key capabilities.",
+      "acceptanceCriteria": [
+        "src/components/landing/FeatureCards.astro renders 6 cards in 1-col mobile, 2-col tablet, 3-col desktop grid",
+        "Each card: custom SVG icon (warm palette only), feature name heading, 1-2 sentence description",
+        "Features: Composable Agents, Type-Safe Tools, Multi-Agent Swarms, Context Engine, Memory System, Provider Agnostic",
+        "SVG icons use only coral, zen-blue, zen-green, currentColor",
+        "Section follows section-divider pattern with data-animate and staggered data-delay",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 28,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Create landing page Code Walkthrough with tabs",
+      "description": "As a visitor, I need tabbed code examples showing single agent, multi-agent, and streaming usage.",
+      "acceptanceCriteria": [
+        "src/components/landing/CodeWalkthrough.astro renders 3 tabs: Agent, Multi-Agent, Streaming",
+        "Tab switching via vanilla <script> toggling data-active attributes",
+        "Each tab shows Python code in window-chrome styled block",
+        "Code content: quickstart weather agent, swarm flow DSL, streaming events",
+        "Active tab indicator: border-b-2 border-coral text-coral",
+        "data-animate='fade' on code container",
+        "Tabs keyboard-accessible (arrow keys switch, Enter activates)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 29,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Create landing page Package Overview section",
+      "description": "As a visitor, I need to see Orbiter's 13-package monorepo structure.",
+      "acceptanceCriteria": [
+        "src/components/landing/PackageOverview.astro renders 13 package cards",
+        "Each card: package name (orbiter-core etc), one-line description, link to /docs/reference/{package}",
+        "Grid: 1-col mobile, 2-col tablet, 3-col desktop",
+        "Cards use Card.astro with hover animation",
+        "Section heading and subtext follow standard section pattern",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 30,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-031",
+      "title": "Create Execution Flow Diagram illustration",
+      "description": "As a visitor, I need a visual diagram showing the agent execution loop.",
+      "acceptanceCriteria": [
+        "src/components/illustrations/ExecutionFlowDiagram.astro renders inline SVG",
+        "Stages: User Input -> Agent -> LLM Call -> Tool Execution -> Response with loop arrow back to LLM",
+        "Rounded rectangles for nodes (rx='12'), colored coral/zen-blue/zen-green",
+        "Animated flow arrows via CSS stroke-dashoffset animation",
+        "Container with bg-subtle and window chrome header",
+        "Responsive: vertical on mobile, horizontal on desktop",
+        "prefers-reduced-motion: arrows static",
+        "All colors via CSS custom properties",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 31,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-032",
+      "title": "Create landing page Architecture Preview and Quick Links sections",
+      "description": "As a visitor, I need the architecture diagram and quick-link cards to complete the landing page.",
+      "acceptanceCriteria": [
+        "src/components/landing/ArchitecturePreview.astro wraps ExecutionFlowDiagram with section heading and description",
+        "src/components/landing/QuickLinks.astro renders 4 cards: Getting Started, Guides, API Reference, GitHub",
+        "Each quick-link card: icon, section name, brief description, arrow indicator, using Card.astro as <a>",
+        "Both sections follow section-divider pattern with data-animate",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 32,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-033",
+      "title": "Assemble complete landing page",
+      "description": "As a visitor, I need the landing page to render all sections in order with proper spacing and animations.",
+      "acceptanceCriteria": [
+        "src/pages/index.astro uses LandingLayout and renders in order: Hero, Feature Cards, Code Walkthrough, Package Overview, Architecture Preview, Quick Links",
+        "Each section separated by section-divider gradient lines",
+        "All sections have data-animate for scroll-triggered entrance",
+        "Page builds without errors",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 33,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-034",
+      "title": "Create Dependency Graph diagram",
+      "description": "As a user reading architecture docs, I need a visual diagram of the 13-package dependency tree.",
+      "acceptanceCriteria": [
+        "src/components/illustrations/DependencyGraph.astro renders inline SVG",
+        "orbiter-core at center/top with radiating connections to dependent packages",
+        "Packages colored by layer: core=coral, extensions=zen-blue, integrations=zen-green",
+        "Window chrome container",
+        "All colors via CSS custom properties (theme-aware)",
+        "prefers-reduced-motion respected",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 34,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-035",
+      "title": "Create Swarm Mode Diagrams",
+      "description": "As a user reading the multi-agent guide, I need diagrams showing the three swarm execution modes.",
+      "acceptanceCriteria": [
+        "src/components/illustrations/SwarmModeDiagram.astro renders 3 small SVGs in a 3-col grid",
+        "Workflow: linear chain A -> B -> C",
+        "Handoff: central agent with arrows to specialist agents",
+        "Team: lead agent at top with worker agents below",
+        "Animated directional arrows (CSS stroke-dashoffset)",
+        "Design system colors only, prefers-reduced-motion respected",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 35,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-036",
+      "title": "Create Context Engine Diagram",
+      "description": "As a user reading context engine docs, I need a tree diagram of the Context object hierarchy.",
+      "acceptanceCriteria": [
+        "src/components/illustrations/ContextEngineDiagram.astro renders tree SVG",
+        "Context at root branching to: State, PromptBuilder, Processors, Workspace, KnowledgeStore, Checkpoint, TokenTracker",
+        "Staggered scroll-reveal animation (data-animate with data-delay)",
+        "Design system colors, rx='12' rectangles, stroke-width='1.5'",
+        "prefers-reduced-motion respected",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 36,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-037",
+      "title": "Integrate Pagefind for full-text search indexing",
+      "description": "As a developer, I need Pagefind to index all built pages at build time.",
+      "acceptanceCriteria": [
+        "package.json build script: 'build': 'astro build && npx pagefind --site dist'",
+        "npm run build produces Pagefind index in dist/pagefind/",
+        "Pagefind JS/CSS NOT loaded eagerly on page load (loaded lazily only when search opens)",
+        "Search returns relevant results for: 'tool decorator', 'swarm modes', 'context engine'",
+        "Typecheck passes"
+      ],
+      "priority": 37,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-038",
+      "title": "Create Search Modal component",
+      "description": "As a user, I need a search modal that opens with Cmd/Ctrl+K, shows live results, and supports keyboard navigation.",
+      "acceptanceCriteria": [
+        "src/components/SearchModal.astro renders centered modal overlay",
+        "Triggers: Cmd+K / Ctrl+K shortcut, or click search icon in Navbar",
+        "Modal: backdrop-blur-sm bg-dark/20 overlay, rounded-xl container, max-w-xl mx-auto",
+        "Search input: border-b border-dark/[0.08], large text, autofocus, placeholder 'Search documentation...'",
+        "Live results as user types using Pagefind API, debounced 150ms",
+        "Results show: page title, section breadcrumb, content snippet with highlighted matches (bg-coral/20 text-coral)",
+        "Keyboard nav: arrows move through results, Enter opens, Escape closes",
+        "Close on overlay click or Escape",
+        "Full-screen on mobile viewports",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 38,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-039",
+      "title": "Create 404 page",
+      "description": "As a user hitting a broken link, I need a friendly 404 page matching the site design.",
+      "acceptanceCriteria": [
+        "src/pages/404.astro uses BaseLayout with Navbar and Footer",
+        "'Lost in orbit' heading in Junicode",
+        "Brief message and link back to /docs/getting-started/",
+        "Simplified orbital decoration (reuse/simplify OrbiterHero rings)",
+        "Works in both light and dark mode",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 39,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-040",
+      "title": "Create favicon and OG image assets",
+      "description": "As a user, I need branded favicon and social sharing image for browser tabs and link previews.",
+      "acceptanceCriteria": [
+        "public/favicon.svg: Orbiter logo (stylized 'O' with orbital ring) using coral color",
+        "public/favicon.ico: 32x32 ICO fallback generated from SVG",
+        "public/og-image.png: 1200x630 social sharing image with Orbiter branding and warm palette",
+        "Both favicon formats referenced in SEOHead component",
+        "OG image referenced in Open Graph meta tags",
+        "Typecheck passes"
+      ],
+      "priority": 40,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-041",
+      "title": "Full build verification and broken link check",
+      "description": "As a developer, I need all 153 pages to build correctly with no broken internal links.",
+      "acceptanceCriteria": [
+        "npm run build completes with zero errors",
+        "All 153+ HTML files generated in dist/",
+        "Spot-check 20+ cross-linked pages for broken internal links",
+        "All remark plugins (title extraction, link rewriting, callouts) work across all pages",
+        "No pages with missing titles in navigation",
+        "Code blocks render with syntax highlighting on all pages",
+        "Build completes in under 30 seconds",
+        "Typecheck passes"
+      ],
+      "priority": 41,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-042",
+      "title": "Performance and accessibility audit",
+      "description": "As a developer, I need the site to meet performance and accessibility standards.",
+      "acceptanceCriteria": [
+        "Lighthouse Performance score >= 95 on landing page and a sample docs page",
+        "Lighthouse Accessibility score >= 95",
+        "Lighthouse Best Practices score >= 95",
+        "Lighthouse SEO score >= 95",
+        "Total JS shipped < 20KB",
+        "All icon-only buttons have aria-label",
+        "Focus rings visible: ring-2 ring-coral/50 ring-offset-2 ring-offset-paper",
+        "prefers-reduced-motion disables all animations",
+        "Pages functional with JavaScript disabled (except search)",
+        "Typecheck passes"
+      ],
+      "priority": 42,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}

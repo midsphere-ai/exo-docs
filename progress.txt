@@ -1,0 +1,789 @@
+# Ralph Progress Log
+Started: Mon Feb 16 07:21:06 PM IST 2026
+
+## Codebase Patterns
+- Tailwind CSS v4 configured via `@tailwindcss/vite` Vite plugin (NOT the older `@astrojs/tailwind` integration)
+- `@astrojs/check` must be installed separately for `astro check` to work
+- `site` property required in astro.config.mjs for `@astrojs/sitemap` to generate sitemap
+- Tailwind v4 `@theme {}` uses `--color-<name>` prefix for color utilities (e.g., `--color-coral` → `bg-coral`, `text-coral`)
+- Design tokens use CSS custom properties in `:root` / `[data-theme='dark']`, referenced by `var()` in `@theme {}`
+- Global CSS lives at `src/styles/global.css` — import Tailwind + fonts here
+- Junicode fonts are variable (woff2) at `public/fonts/Junicode-{Roman,Italic}.woff2`
+- Scroll animations: `[data-animate="reveal|fade|scale"]` + `[data-delay="1-6"]` → IntersectionObserver adds `.is-visible` class
+- Use `color-mix(in srgb, var(--custom-prop) N%, transparent)` for opacity on CSS custom properties in raw CSS
+- `.prose` class styles all markdown-rendered content; `.section-divider` adds decorative gradient line via `::before`
+- `cn()` class merge utility at `src/utils/merge.ts` — wraps clsx + tailwind-merge for conflict-free class merging
+- BaseLayout at `src/layouts/BaseLayout.astro` — all pages wrap with this; Props: `title`, `description?`
+- Theme detection: blocking `is:inline` script in `<head>` reads localStorage → prefers-color-scheme → "light" default
+- Downstream layouts MUST include `<main id="main-content">` for skip-to-content link
+- Content collection: `src/content.config.ts` defines `docs` collection with `glob({ pattern: '**/*.md', base: './docs-source' })`
+- Astro 5 Content Layer API puts glob-loaded collections in `DataEntryMap` — use `getCollection('docs')` and `render(entry)` from `astro:content`
+- All schema fields optional (most docs have no frontmatter) — `z.object({ title, description, order, category, draft })`
+- Remark plugins live in `src/plugins/` and are registered in `astro.config.mjs` under `markdown.remarkPlugins`
+- Remark plugins inject frontmatter via `file.data.astro.frontmatter` — Astro reads this for rendered entries
+- Import remark plugins in astro.config.mjs with `.ts` extension (Astro/Vite handles TS transpilation)
+- Remark plugin `file.path` is an absolute filesystem path — extract relative path by finding `docs-source/` marker
+- Glob loader entry IDs do NOT include `.md` extension — IDs like `guides/agents`, `getting-started`, `index`
+- `index.md` entries get their directory as ID: `guides/index.md` → `guides`, `index.md` → `index`
+- Detect index entries by checking if any other entry starts with `{id}/` (i.e., the ID is a directory prefix)
+- `render(entry)` from `astro:content` returns `{ Content, headings, remarkPluginFrontmatter }` — Content is Astro component, headings is `{ depth, slug, text }[]`
+- `remarkPluginFrontmatter` contains values set by remark plugins (e.g., extracted title from remark-extract-title)
+- For catch-all `[...slug]` routes, pass `undefined` (not `""`) for the root/index route
+- Nav tree utility at `src/utils/navigation.ts` — `buildNavTree()` returns `NavSection[]` with `items: NavItem[]` and `children: NavSection[]`
+- Section ordering defined in `SECTION_ORDER` map: getting-started=1, guides=2, architecture=3, reference=4, contributing=5, other=6
+- DocsLayout at `src/layouts/DocsLayout.astro` — wraps BaseLayout with 3-column grid; named slots: `sidebar`, `toc`, `before-content`, `after-content`
+- All docs pages use DocsLayout (not BaseLayout directly) — Props: `title`, `headings`, `slug`
+- Sidebar component at `src/components/Sidebar.astro` — uses `buildNavTree()`, accepts `currentSlug` prop
+- `<details open={boolean}>` pattern for collapsible sections — active section auto-expands based on current slug
+- CSS-only drawer: hidden checkbox + `~` sibling combinator + `<label for>` — no JS needed for open/close toggle
+- MobileDrawer component at `src/components/MobileDrawer.astro` — accepts `currentSlug` prop, renders full Sidebar inside
+- Breadcrumbs component at `src/components/Breadcrumbs.astro` — accepts `slug` and `title` props, uses `before-content` slot in DocsLayout
+- TOC component at `src/components/TableOfContents.astro` — accepts `headings` prop, uses `toc` slot in DocsLayout (xl+ only)
+- PrevNext component at `src/components/PrevNext.astro` — accepts `slug` prop, uses `after-content` slot in DocsLayout
+- Navbar component at `src/components/Navbar.astro` — sticky header, z-index 30, height 3.5rem
+- Navbar height (3.5rem) must be accounted for in all sticky sidebar/TOC `top` and `max-height` values
+- UI components (Button, Card) live in `src/components/ui/` — polymorphic pattern with `as` or `href` props
+- Rehype plugins live in `src/plugins/` alongside remark plugins — registered in `astro.config.mjs` under `markdown.rehypePlugins`
+- Shiki dual themes configured: `github-light` + `github-dark` with `defaultColor: false` — CSS must select `var(--shiki-light)` or `var(--shiki-dark)` per theme
+- Code blocks wrapped by `rehype-code-blocks` plugin with `.code-block` div (header + pre) — language from Shiki's `dataLanguage` prop on `<pre>`
+- IMPORTANT: `.astro` cache can cause stale builds — delete `.astro/` when changing rehype/remark plugins or content config
+- SEOHead component at `src/components/SEOHead.astro` — handles title, meta, OG, Twitter Card, favicons, JSON-LD
+- BaseLayout Props: `title`, `description?`, `pageType?` ('landing'|'docs'), `breadcrumbs?` — forwarded to SEOHead
+- SEO utilities at `src/utils/seo.ts` — JSON-LD generators for Organization, TechArticle, BreadcrumbList
+- LandingLayout at `src/layouts/LandingLayout.astro` — wraps BaseLayout + Navbar + Footer; no sidebar/TOC; `pageType="landing"`
+- Illustration components live in `src/components/illustrations/` — CSS-only, `aria-hidden="true"`, with `prefers-reduced-motion` support
+- Landing page components live in `src/components/landing/` — one component per section
+- Pagefind dynamic import MUST use `is:inline` script — Vite cannot resolve `/pagefind/pagefind.js` at build time (generated post-build by `npx pagefind`)
+- SearchModal at `src/components/SearchModal.astro` — rendered in BaseLayout, available on all pages; lazy-loads Pagefind on first open
+- Focus ring pattern: `:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent); outline-offset: 2px; }` — use on ALL interactive elements
+- No-JS fallback: `<noscript><style>` in BaseLayout `<head>` handles `[data-animate]` visibility, code copy button hiding, and dark mode via `prefers-color-scheme`
+---
+
+## 2026-02-16 19:24 - US-001
+- Installed all required dependencies: @tailwindcss/vite@^4, tailwindcss@^4, @astrojs/sitemap@^3, @fontsource-variable/bricolage-grotesque@^5, clsx@^2, tailwind-merge@^2, typescript@^5 (dev), pagefind@^1 (dev)
+- Configured astro.config.mjs with Tailwind v4 via Vite plugin and @astrojs/sitemap integration
+- Added site: 'https://orbiter.dev' for sitemap generation
+- Files changed: package.json, package-lock.json, astro.config.mjs
+- **Learnings for future iterations:**
+  - `@astrojs/check` needs to be installed separately for typecheck to work
+  - Tailwind v4 uses `@tailwindcss/vite` as a Vite plugin, not the old `@astrojs/tailwind` integration
+  - `@astrojs/sitemap` requires `site` in astro config or it silently skips
+  - tsconfig.json already extends `astro/tsconfigs/strict` from initial scaffolding
+---
+
+## 2026-02-16 19:28 - US-002
+- Created `src/styles/global.css` with design system color tokens, font faces, and Tailwind v4 theme mapping
+- Downloaded and added real Junicode woff2 variable fonts (Roman + Italic) from GitHub release v2.222
+- CSS custom properties: `--zen-paper`, `--zen-dark`, `--zen-muted`, `--zen-subtle` with `[data-theme='dark']` overrides
+- `@theme {}` maps tokens to Tailwind: paper, dark, coral, zen-blue, zen-green, muted, subtle
+- Body defaults: Bricolage Grotesque, font-weight 500, bg-paper, text-dark
+- Files changed: src/styles/global.css, public/fonts/Junicode-Roman.woff2, public/fonts/Junicode-Italic.woff2
+- **Learnings for future iterations:**
+  - Tailwind v4 `@theme {}` block uses `--color-<name>` prefix to create color utilities (e.g., `bg-coral`, `text-dark`)
+  - Junicode v2 ships as variable fonts (JunicodeVF-Roman/Italic), not static faces
+  - CSS custom properties in `:root` + `[data-theme='dark']` override pattern works with Tailwind v4's `var()` references in `@theme`
+  - `@import "@fontsource-variable/bricolage-grotesque"` auto-loads the variable font CSS
+---
+
+## 2026-02-16 19:30 - US-003
+- Added animation keyframes to global.css: zenReveal, zenFade, zenScale, heroEntrance
+- Added scroll-triggered animation base styles: `[data-animate]` starts at opacity 0, `.is-visible` triggers named animation
+- Added stagger delay CSS: `[data-delay='1']` through `[data-delay='6']` with 0.15s increments
+- Added `@media (prefers-reduced-motion: reduce)` that resets all animations to final state
+- Added comprehensive `.prose` class styles: paragraphs, links, inline code, bold, blockquotes, lists, tables, headings, hr, images
+- Added `.section-divider` class with `::before` gradient line (transparent → zen-dark at 8% → transparent)
+- Files changed: src/styles/global.css
+- **Learnings for future iterations:**
+  - `color-mix(in srgb, var(--zen-dark) 80%, transparent)` is the CSS-native way to do opacity on custom properties (no Tailwind opacity modifier needed in raw CSS)
+  - `[data-animate]` + `.is-visible` pattern: elements start invisible, IntersectionObserver (in BaseLayout) adds `.is-visible` class to trigger animation
+  - Animation variants are mapped via `[data-animate="reveal"]`, `[data-animate="fade"]`, `[data-animate="scale"]`
+  - Stagger delays use `animation-delay` so they work with any animation name
+---
+
+## 2026-02-16 19:31 - US-004
+- Created `src/utils/merge.ts` exporting `cn()` function that wraps `clsx` + `tailwind-merge`
+- Files changed: src/utils/merge.ts
+- **Learnings for future iterations:**
+  - `cn()` utility at `src/utils/merge.ts` — import from here in all components that accept `class` props
+  - Pattern: `import { cn } from "@/utils/merge"` (or relative path) for class merging
+---
+
+## 2026-02-16 19:33 - US-005
+- Created `src/layouts/BaseLayout.astro` with full HTML shell, theme detection, and animation observer
+- Blocking inline `<script is:inline>` in `<head>` reads localStorage theme, falls back to prefers-color-scheme, defaults to light
+- Body `<script>` creates IntersectionObserver for `[data-animate]` elements (threshold 0.05, rootMargin -40px bottom), adds `is-visible` class, unobserves
+- Skip-to-content link with `sr-only focus:not-sr-only` pattern
+- Font preloads for Junicode-Roman and Bricolage Grotesque
+- Props interface: `title: string`, `description?: string`
+- Files changed: src/layouts/BaseLayout.astro
+- **Learnings for future iterations:**
+  - BaseLayout is at `src/layouts/BaseLayout.astro` — all pages should wrap with this
+  - Theme detection script MUST be `is:inline` (blocking) in `<head>` to prevent flash-of-wrong-theme
+  - Animation observer script is non-blocking (processed by Astro), placed at end of `<body>`
+  - `<style is:global>` with `@import "../styles/global.css"` loads global styles in Astro components
+  - Skip-to-content link targets `#main-content` — downstream layouts must include `<main id="main-content">`
+---
+
+## 2026-02-16 19:37 - US-006
+- Created `src/content.config.ts` defining `docs` collection with glob loader pointing to `./docs-source`
+- Schema: `z.object({ title, description, order, category, draft })` — all optional, draft defaults to false
+- Verified: `astro check` passes (0 errors), `astro build` succeeds, `astro dev` starts cleanly
+- Content sync loads all 153 markdown files from docs-source/ into the data store (5.6MB)
+- Files changed: src/content.config.ts
+- **Learnings for future iterations:**
+  - Astro 5 Content Layer API with `glob()` loader puts collections in `DataEntryMap` (not `ContentEntryMap`)
+  - Entry IDs from glob loader include the `.md` extension (e.g., `getting-started/quickstart.md`)
+  - `astro sync` generates types and populates `.astro/data-store.json` without starting dev server
+  - All schema fields must be optional when docs have no frontmatter — Zod will error on missing required fields
+  - `.astro/collections/docs.schema.json` auto-generated from Zod schema — useful for debugging schema issues
+---
+
+## 2026-02-16 19:40 - US-007
+- Created `src/plugins/remark-extract-title.ts` — remark plugin that extracts first `# heading` from AST
+- Title injected into `file.data.astro.frontmatter.title`; h1 node removed from AST
+- Files with existing frontmatter `title` are not overridden
+- Files without any `# heading` build without error (title remains undefined, falls back downstream)
+- Registered plugin in `astro.config.mjs` under `markdown.remarkPlugins`
+- Verified: all 5 unit test cases pass, `astro check` 0 errors, `astro build` succeeds
+- Files changed: src/plugins/remark-extract-title.ts, astro.config.mjs
+- **Learnings for future iterations:**
+  - Remark plugins in `src/plugins/` — import with `.ts` extension in astro.config.mjs
+  - Astro frontmatter injection: `file.data.astro.frontmatter.title` — must create the nested structure if absent
+  - `@types/mdast`, `unified`, `vfile`, `unist-util-visit` all available from Astro's transitive deps (no extra installs needed)
+  - Remark plugins can be verified with Node.js by constructing test AST trees and VFile objects
+  - `extractText()` recursive helper handles nested inline nodes (emphasis, strong, links, inlineCode)
+---
+
+## 2026-02-16 19:44 - US-008
+- Created `src/plugins/remark-rewrite-links.ts` — remark plugin that rewrites relative `.md` links to absolute `/docs/` routes
+- Handles: same-directory links (`concepts.md`), parent-relative links (`../guides/context/index.md`), `index.md` stripping, anchor preservation (`file.md#section`)
+- Skips external URLs (`https://...`) and anchor-only links (`#section`)
+- Registered plugin in `astro.config.mjs` under `markdown.remarkPlugins`
+- Files changed: src/plugins/remark-rewrite-links.ts, astro.config.mjs, package-lock.json
+- **Learnings for future iterations:**
+  - `file.history[0]` / `file.path` in remark plugins is an **absolute filesystem path** (e.g., `/home/user/project/docs-source/getting-started/quickstart.md`)
+  - Must extract the relative path by finding the `docs-source/` marker in the absolute path
+  - Use `path.posix` for URL route construction (forward slashes), `path` for OS path operations
+  - `path.posix.normalize(path.posix.join(dir, relative))` correctly resolves `../` parent references
+  - Markdown links can have anchors after `.md` — split on `#` to preserve them
+---
+
+## 2026-02-16 19:46 - US-009
+- Created `src/plugins/remark-callouts.ts` — remark plugin that converts GitHub-flavored alert blockquotes into styled callout HTML
+- Supports four types: `[!TIP]`, `[!INFO]`, `[!WARNING]`, `[!DANGER]` (case-insensitive)
+- Output: `<div data-callout-type="...">` with `.callout-header` (icon SVG + label) and `.callout-content` wrapper
+- Registered plugin in `astro.config.mjs` under `markdown.remarkPlugins`
+- Files changed: src/plugins/remark-callouts.ts, astro.config.mjs
+- **Learnings for future iterations:**
+  - GitHub-flavored alert syntax: `> [!TYPE]` at the start of a blockquote's first paragraph text node
+  - Remark plugin tree mutation: when replacing a blockquote with multiple nodes, use `parent.children.splice(index, 1, ...replacements)` and return `index` to re-visit
+  - Callout icons are inline SVGs (Lucide-style) embedded directly in the HTML output — styled via CSS `[data-callout-type]` selectors
+  - The `visit()` callback supports returning the index to control traversal after tree mutations
+---
+
+## 2026-02-16 19:48 - US-010
+- Added CSS styles for callout blocks in `src/styles/global.css`
+- Four callout types styled with color-coded accents: tip (zen-green), info (zen-blue), warning (coral), danger (red)
+- All callouts: 3px left border, 6% background tint, rounded-lg, icon + label header row, content below
+- Content spacing handled with first/last child margin resets
+- Files changed: src/styles/global.css
+- **Learnings for future iterations:**
+  - Callout HTML structure: `[data-callout-type]` > `.callout-header` (icon + `.callout-label`) + `.callout-content`
+  - Icons are inline SVGs with `currentColor` stroke — styled by setting `color` on `.callout-header`
+  - `color-mix(in srgb, <color> 6%, transparent)` creates the subtle background tint
+  - Danger uses raw `#ef4444` (red-500) since it's not in the theme tokens
+---
+
+## 2026-02-16 19:50 - US-011
+- Created `src/pages/docs/[...slug].astro` with `getStaticPaths()` mapping all docs collection entries to routes
+- Entry ID `.md` extension stripped for slug; `index` / trailing `/index` stripped for directory routes
+- Each page renders with BaseLayout, h1 title, and `.prose` content div
+- Build produces 154 pages in dist/docs/ with zero errors
+- Files changed: src/pages/docs/[...slug].astro
+- **Learnings for future iterations:**
+  - Glob loader entry IDs include `.md` extension — must strip for URL slugs
+  - `index.md` entries need special handling: `index` → `""` (empty string), `foo/index` → `foo`
+  - For catch-all `[...slug]`, pass `undefined` (not `""`) for the root index route
+  - `render(entry)` returns `{ Content, headings }` — Content is an Astro component, headings is array of `{ depth, slug, text }`
+  - Title comes from `entry.data.title` (injected by remark-extract-title plugin into frontmatter)
+---
+
+## 2026-02-16 19:56 - US-012
+- Created `src/utils/navigation.ts` exporting `buildNavTree()` async function returning `NavSection[]`
+- Interfaces: `NavSection { slug, label, order, items: NavItem[], children: NavSection[] }`, `NavItem { slug, title, order, href }`
+- Top-level sections ordered: Getting Started (1), Guides (2), Architecture (3), Reference (4), Contributing (5), Other (6)
+- Section labels extracted from index.md titles via `render()` + `remarkPluginFrontmatter`, fallback to title-cased directory names
+- Items sorted by frontmatter `order` first, then alphabetically
+- Nested subsections work: `guides/context/` appears as child of Guides, `reference/core/` as child of Reference
+- Index entries detected by checking if any other entry has the ID as a path prefix
+- Files changed: src/utils/navigation.ts, prd.json, progress.txt
+- **Learnings for future iterations:**
+  - Glob loader entry IDs do NOT include `.md` extension (correcting earlier pattern)
+  - `index.md` entries have their directory path as ID: `guides/index.md` → ID `guides`
+  - To detect index entries, check if any other entry ID starts with `{id}/` (the ID is a directory prefix)
+  - `render(entry)` returns `remarkPluginFrontmatter` containing remark-injected values like extracted title
+  - `entry.data.title` only has frontmatter-defined titles, NOT remark-extracted ones (those require `render()`)
+---
+
+## 2026-02-16 19:58 - US-013
+- Created `src/layouts/DocsLayout.astro` with three-column responsive CSS grid layout
+- Grid layout: 1fr (mobile) → 240px 1fr (lg) → 256px 1fr 200px (xl)
+- Sidebar: sticky, overflow-y-auto, hidden below lg breakpoint, border-right separator
+- TOC: sticky, hidden below xl breakpoint
+- Content area: `.prose mx-auto max-w-3xl` with responsive padding
+- `<main id="main-content">` landmark wraps content slot
+- Named slots: `sidebar`, `toc`, `before-content`, `after-content`
+- Updated `[...slug].astro` to use DocsLayout instead of BaseLayout, passing headings and slug
+- Files changed: src/layouts/DocsLayout.astro (new), src/pages/docs/[...slug].astro (modified)
+- **Learnings for future iterations:**
+  - DocsLayout wraps BaseLayout — use DocsLayout for all docs pages
+  - DocsLayout Props: `title`, `headings`, `slug` — headings/slug passed through for child components (TOC, Sidebar)
+  - Named slots `sidebar` and `toc` accept components that will be added in later stories (US-014, US-017)
+  - CSS grid with media queries used instead of Tailwind classes for the three-column layout (cleaner responsive behavior)
+  - `color-mix(in srgb, var(--zen-dark) 6%, transparent)` for subtle sidebar border
+---
+
+## 2026-02-16 20:02 - US-014
+- Created `src/components/Sidebar.astro` with collapsible sections using `<details>/<summary>` elements
+- Renders `NavSection[]` from `buildNavTree()` as a nested `<nav>` with per-section collapsible groups
+- Current section auto-opens via `isSectionActive()` recursive check against `currentSlug`
+- Active page: coral text, 2px coral left border, coral/10 background, `aria-current="page"`
+- Section labels: 11px uppercase, 0.15em tracking, 40% dark opacity, 600 weight
+- Nav items: 0.875rem, 70% dark opacity, 1px left border at 6% opacity, hover to full dark
+- Nested subsections render as indented child `<details>` groups with increased left padding
+- Integrated into `[...slug].astro` via `<Sidebar slot="sidebar" currentSlug={slug} />`
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/Sidebar.astro (new), src/pages/docs/[...slug].astro (modified), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - Sidebar component at `src/components/Sidebar.astro` — accepts `currentSlug: string` prop
+  - `<details open={boolean}>` in Astro templates controls initial open state — use for auto-expanding active sections
+  - Hide native `<details>` markers with `::marker { content: '' }` + `::-webkit-details-marker { display: none }`
+  - `color-mix(in srgb, var(--color-coral) 10%, transparent)` for active item background tint
+  - Sidebar uses scoped `<style>` (not global) — all class names are component-local
+---
+
+## 2026-02-16 20:04 - US-015
+- Created `src/components/MobileDrawer.astro` — mobile sidebar drawer with CSS-only toggle
+- Hidden checkbox + sibling selectors control backdrop and slide-in panel (no JS needed for open/close)
+- Hamburger button fixed top-left, visible below lg breakpoint, hidden at lg+
+- Backdrop: 30% dark overlay with 4px backdrop-blur, dismisses on click via label
+- Drawer panel: 280px wide (max 85vw), slides from left with 300ms ease transition
+- Drawer header with "Navigation" title and close button
+- Contains full Sidebar component with currentSlug prop
+- Minimal `<script>` closes drawer on nav link click and syncs `aria-expanded` on hamburger
+- Integrated into DocsLayout.astro (rendered above docs-grid)
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/MobileDrawer.astro (new), src/layouts/DocsLayout.astro (modified)
+- **Learnings for future iterations:**
+  - CSS-only drawer pattern: hidden checkbox + `~` sibling combinator to toggle backdrop/panel visibility
+  - `<label for="checkbox-id">` acts as click target without JS — use for hamburger, backdrop, and close button
+  - Fixed position hamburger (z-index: 50) sits above drawer panel (z-index: 45) and backdrop (z-index: 40)
+  - `max-width: 85vw` prevents drawer from being wider than screen on very small devices
+  - Drawer hidden at lg+ via `display: none` on backdrop and panel — no interference with desktop sidebar
+---
+
+## 2026-02-16 20:06 - US-016
+- Created `src/components/Breadcrumbs.astro` — breadcrumb navigation above docs content
+- Breadcrumbs derive path from current slug: Home > Section > Subsection > Current Page
+- Uses `buildNavTree()` to look up proper section labels (e.g., "guides" → "Guides", "guides/context" → "Context Engine")
+- All items except last are clickable links; last item is styled as current page (text-dark/70 font-medium)
+- Separator: `>` in text-dark/30, overall text-sm text-dark/50
+- Integrated into `[...slug].astro` via `<Breadcrumbs slot="before-content" slug={slug} title={title} />`
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/Breadcrumbs.astro (new), src/pages/docs/[...slug].astro (modified)
+- **Learnings for future iterations:**
+  - Use `buildNavTree()` + recursive indexing into a `Map<string, string>` to resolve slug paths to human-readable labels
+  - `before-content` named slot in DocsLayout is the right place for breadcrumbs (renders above `.prose` area)
+  - `color-mix(in srgb, var(--zen-dark) N%, transparent)` pattern for opacity on CSS custom properties
+  - Breadcrumbs use `<nav aria-label="Breadcrumb">` with `<ol>` for accessibility
+---
+
+## 2026-02-16 20:08 - US-017
+- Created `src/components/TableOfContents.astro` with scroll-spy highlighting
+- Renders h2 and h3 headings as a flat list with h3 items indented via `pl-3`
+- "On this page" label: 11px uppercase, 0.15em tracking, 40% dark opacity, 600 weight
+- Links: 0.875rem, 50% dark opacity, hover to full dark, 2px transparent left border
+- Active heading: coral text, font-weight 500, coral left border (via `.is-active` class)
+- Vanilla `<script>` IntersectionObserver (`rootMargin: -80px 0px -60% 0px`) tracks topmost visible heading
+- Smooth scroll on TOC link click with `history.replaceState` for hash update
+- Integrated into `[...slug].astro` via `<TableOfContents slot="toc" headings={headings} />`
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/TableOfContents.astro (new), src/pages/docs/[...slug].astro (modified), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - TOC component at `src/components/TableOfContents.astro` — accepts `headings: { depth, slug, text }[]` prop
+  - TOC uses the `toc` named slot in DocsLayout (visible only at xl+ breakpoint, 200px column)
+  - IntersectionObserver `rootMargin: '-80px 0px -60% 0px'` highlights heading when it enters the top 40% of viewport
+  - Scoped `<style>` for component-local CSS; `<script>` (non-inline) for processed TS
+  - `data-toc-link` attribute used as selector for scroll-spy script
+  - `document.addEventListener('astro:after-swap', fn)` for Astro view transition support
+---
+
+## 2026-02-16 20:10 - US-018
+- Created `src/components/PrevNext.astro` — prev/next navigation cards at the bottom of docs pages
+- Flattens the nav tree into a sequential list of all pages (sections → items → subsection items)
+- Finds current page by href match, provides previous and next links with section labels
+- Cards: border, rounded-xl, directional arrows (chevron SVGs), section label + page title
+- Hover: translateY(-2px), increased border opacity, subtle shadow, 300ms transition
+- First page shows only Next; last page shows only Previous; empty div placeholder for grid alignment
+- Responsive: 2-column grid on sm+, single column on mobile
+- Integrated into `[...slug].astro` via `<PrevNext slot="after-content" slug={slug} />`
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/PrevNext.astro (new), src/pages/docs/[...slug].astro (modified)
+- **Learnings for future iterations:**
+  - PrevNext component at `src/components/PrevNext.astro` — accepts `slug: string` prop, uses `after-content` slot in DocsLayout
+  - Flatten nav tree to get sequential page order: iterate sections → items → children recursively
+  - `after-content` named slot in DocsLayout renders below the `.prose` content area (inside `<main>`)
+  - Use `color-mix(in srgb, var(--zen-dark) N%, transparent)` for subtle borders/shadows (consistent with other components)
+---
+
+## 2026-02-16 20:14 - US-019
+- Created `src/components/Navbar.astro` — sticky top nav with 3-column grid layout
+- Logo: Orbiter wordmark in Junicode serif font, linking to /
+- Center nav links (desktop only): Getting Started, Guides, API Reference, GitHub
+- Right actions: search trigger (with ⌘K badge), theme toggle (sun/moon swap), GitHub icon
+- Theme toggle: swaps data-theme on <html>, persists to localStorage, icon toggles via CSS :global() selector
+- Desktop nav hidden below lg; GitHub link hidden below sm; search shortcut badge hidden below lg
+- Backdrop-blur sticky header: 80% paper background, 12px blur, 4% dark bottom border
+- Integrated into DocsLayout.astro — renders above MobileDrawer and docs grid
+- Updated DocsLayout sidebar/TOC sticky top to 3.5rem with max-height calc(100vh - 3.5rem) to account for navbar
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/Navbar.astro (new), src/layouts/DocsLayout.astro (modified)
+- **Learnings for future iterations:**
+  - Navbar component at `src/components/Navbar.astro` — sticky header with z-index 30
+  - Navbar height is 3.5rem (56px) — all sticky elements below must use `top: 3.5rem` and `max-height: calc(100vh - 3.5rem)`
+  - Theme toggle uses CSS `:global([data-theme="dark"])` to conditionally show sun/moon icons — no JS needed for icon state
+  - `document.addEventListener('astro:after-swap', fn)` pattern re-initializes JS after Astro view transitions
+  - Search trigger button has `id="search-trigger"` — SearchModal (US-038) will listen for clicks on this
+  - MobileDrawer hamburger (z-index 50) sits above Navbar (z-index 30) — no conflicts
+---
+
+## 2026-02-16 20:15 - US-020
+- Created `src/components/Footer.astro` with inverted color scheme (bg-dark text-paper)
+- Three link columns: Documentation (4 links), Community (2 links), Resources (2 links)
+- Responsive grid: 2-col mobile (Documentation spans full width), 3-col at sm+
+- Orbiter wordmark in Junicode serif + copyright year in bottom bar
+- Decorative concentric circle rings (3 rings, paper-colored borders at 18% opacity) positioned bottom-right, hidden on mobile
+- External links (GitHub) open in new tab with `target="_blank" rel="noopener noreferrer"`
+- Files changed: src/components/Footer.astro (new), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - Footer uses inverted color scheme: `background: var(--zen-dark); color: var(--zen-paper)` — works in both light/dark modes
+  - `color-mix(in srgb, var(--zen-paper) N%, transparent)` for opacity on paper color (inverse of the pattern used elsewhere)
+  - Decorative rings use `position: absolute` with negative offsets to create partially-visible orbital decoration
+  - Footer is not yet integrated into any layout — will be used by LandingLayout (US-025) and potentially DocsLayout
+---
+
+## 2026-02-16 20:17 - US-021
+- Created `src/components/ui/Button.astro` — polymorphic button/anchor component with three variants
+- Created `src/components/ui/Card.astro` — polymorphic container component with hover effects
+- Button: renders `<a>` if `href` prop, `<button>` otherwise; variants via `isPrimary` / `isBordered` / default
+- Button: isPrimary (bg-dark text-paper shadow-lg), isBordered (2px border fills on hover), default (bg-subtle)
+- Button: rounded-xl, hover:scale(1.02) active:scale(0.98), 200ms transitions
+- Card: accepts `as` prop (div/article/a), rounded-xl, bg-subtle/80, border, hover translateY(-2px) with shadow
+- Both accept `class` prop merged via `cn()` utility
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/ui/Button.astro (new), src/components/ui/Card.astro (new)
+- **Learnings for future iterations:**
+  - UI components live in `src/components/ui/` directory
+  - Polymorphic Astro components: use `const Tag = href ? "a" : "button"` pattern with `<Tag>` dynamic element
+  - Both Button and Card use scoped `<style>` blocks with CSS custom properties (not Tailwind classes) for consistency
+  - `cn()` import from `../../utils/merge` (relative path) for class merging in components
+  - Focus-visible style: `outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent); outline-offset: 2px`
+---
+
+## 2026-02-16 20:24 - US-022
+- Configured Shiki syntax highlighting with dual themes (github-light + github-dark) via `shikiConfig` in astro.config.mjs
+- Created `src/plugins/rehype-code-blocks.ts` — rehype plugin that wraps `<pre>` blocks with window chrome header
+- Window chrome: three dots (coral/blue/green at 40% opacity) + language label, in `.code-header` div
+- Code block container: `.code-block` div with rounded-xl, border, overflow-hidden
+- Added CSS in `global.css`: warm-tinted light bg (`bg-dark/[0.04]`), dark bg (`#161616`), Shiki theme switching
+- `<pre>` has `tabindex="0"`, `role="region"`, `aria-label="{lang} code example"` for accessibility
+- Language detection reads Shiki's `dataLanguage` property from `<pre>` element, falls back to `language-*` class on `<code>`
+- Files changed: astro.config.mjs, src/plugins/rehype-code-blocks.ts (new), src/styles/global.css
+- **Learnings for future iterations:**
+  - Astro's Shiki integration runs BEFORE user rehype plugins — by the time rehype plugins run, `<pre>` already has Shiki attributes (`data-language`, `style` with `--shiki-*` vars, `astro-code` class)
+  - With `defaultColor: false`, Shiki only sets CSS custom properties (`--shiki-light`, `--shiki-dark`) on spans, no inline `color` — must add CSS rules to select the right variable
+  - `.astro/` cache directory can serve stale content — delete it when debugging plugin changes
+  - HAST property for `data-language` is `dataLanguage` (camelCase)
+  - The `<code>` child inside Shiki-processed `<pre>` has NO properties (empty `{}`) — Shiki strips the `language-*` class
+---
+
+## 2026-02-16 20:27 - US-023
+- Added copy-to-clipboard button on code blocks
+- Rehype plugin (`rehype-code-blocks.ts`) now injects a `.code-copy-btn` button with clipboard and check SVG icons into each `.code-block` wrapper
+- CSS in `global.css` styles the button: positioned top-right, hidden by default, appears on `.code-block:hover` or focus-visible
+- Copied state: `.is-copied` class swaps clipboard icon for green checkmark, reverts after 2 seconds
+- Vanilla `<script>` in `BaseLayout.astro` handles clipboard logic via `navigator.clipboard.writeText()`
+- Button is keyboard-accessible (focusable, activates on Enter/Space via native `<button>`)
+- `astro:after-swap` listener re-initializes copy buttons on Astro view transitions
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/plugins/rehype-code-blocks.ts, src/styles/global.css, src/layouts/BaseLayout.astro
+- **Learnings for future iterations:**
+  - Copy button added via rehype plugin (server-side HTML injection) + client-side script in BaseLayout
+  - `.code-copy-btn` positioned absolutely within `.code-block` (which already has `position: relative` from the new CSS)
+  - SVG icon toggle pattern: two sibling SVGs with `.code-copy-icon` / `.code-check-icon`, toggled via `.is-copied` class hiding one and showing the other
+  - `backdrop-filter: blur(4px)` on semi-transparent button background gives a nice frosted glass effect over code
+  - `navigator.clipboard.writeText()` requires HTTPS in production but works on localhost
+---
+
+## 2026-02-16 20:30 - US-024
+- Created `src/components/SEOHead.astro` — generates title, meta description, canonical URL, OG tags, Twitter Card tags, favicon links, and JSON-LD structured data
+- Created `src/utils/seo.ts` — exports JSON-LD generators: `generateOrganizationJsonLd()` (landing page), `generateTechArticleJsonLd()` (docs pages), `generateBreadcrumbJsonLd()` (all pages with breadcrumbs)
+- Integrated SEOHead into BaseLayout replacing inline title/description/favicon meta tags
+- Updated DocsLayout to pass raw title (SEOHead now handles `{title} - Orbiter Docs` formatting)
+- BaseLayout now accepts `pageType` ('landing' | 'docs') and `breadcrumbs` props, forwarded to SEOHead
+- Title format: landing pages → "Orbiter", docs pages → "{title} - Orbiter Docs"
+- `@astrojs/sitemap` confirmed generating sitemap-index.xml and sitemap-0.xml with all 154 pages
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/SEOHead.astro (new), src/utils/seo.ts (new), src/layouts/BaseLayout.astro (modified), src/layouts/DocsLayout.astro (modified)
+- **Learnings for future iterations:**
+  - SEOHead component at `src/components/SEOHead.astro` — accepts `title`, `description?`, `type?` ('landing'|'docs'), `breadcrumbs?`
+  - SEO utilities at `src/utils/seo.ts` — `BreadcrumbItem` type exported for use by layouts
+  - BaseLayout Props now include `pageType` and `breadcrumbs` — forwarded to SEOHead
+  - DocsLayout passes raw title to BaseLayout; SEOHead handles title suffix formatting
+  - `Astro.site` returns the `site` value from `astro.config.mjs` — use for canonical URLs and JSON-LD
+  - `Astro.url.pathname` gives the current page path — combine with `Astro.site` for full canonical URL
+  - JSON-LD `<script type="application/ld+json">` uses `set:html` directive in Astro to inject serialized JSON
+---
+
+## 2026-02-16 20:32 - US-025
+- Created `src/layouts/LandingLayout.astro` — wraps BaseLayout with Navbar, content slot, and Footer
+- No sidebar, no TOC — clean single-column layout for marketing-style landing page
+- Content sections styled via scoped `:global(section.section-divider)` with max-w-6xl (72rem), responsive horizontal padding (px-4 → sm:px-6 → lg:px-8)
+- Uses `pageType="landing"` for SEOHead (title format: just "Orbiter", not "X - Orbiter Docs")
+- `<main id="main-content">` landmark included for skip-to-content link
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/layouts/LandingLayout.astro (new), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - LandingLayout at `src/layouts/LandingLayout.astro` — use for landing/marketing pages (no sidebar/TOC)
+  - Pass `pageType="landing"` to BaseLayout so SEOHead uses landing title format
+  - Use `:global()` selector in scoped `<style>` to target slotted child elements (e.g., `main :global(section.section-divider)`)
+  - Footer component is shared between LandingLayout and potentially DocsLayout
+---
+
+## 2026-02-16 20:35 - US-026
+- Created `src/components/illustrations/OrbiterHero.astro` — CSS-only animated orbital illustration
+- Central circle with pulsing radial gradient glow (coral colored)
+- 3 concentric orbital rings at 55%, 75%, 95% of container width, with 12% dark opacity borders
+- Small orbiting circles (14px) on each ring: coral (ring 1), zen-blue (ring 2), zen-green (ring 3)
+- Orbiting via CSS `@keyframes rotate-ring` at 12s, 18s, 25s speeds; middle ring rotates in reverse
+- Each orbiter has matching color glow via box-shadow
+- `prefers-reduced-motion: reduce` stops all animations, places orbiters at fixed staggered positions (0°, 120°, 240°)
+- `aria-hidden="true"` since illustration is purely decorative
+- Component is aspect-ratio 1:1, max-width 480px, self-centering with margin auto
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/illustrations/OrbiterHero.astro (new)
+- **Learnings for future iterations:**
+  - Illustration components go in `src/components/illustrations/` directory
+  - CSS-only orbital animation: apply `@keyframes rotate-ring` (translate + rotate) to ring container; orbiter sits at top and rotates with parent
+  - `color-mix(in srgb, var(--color-coral) 40%, transparent)` for glowing box-shadow effect
+  - Reduced motion: set `animation: none` and fixed `transform` with rotation offset for staggered static positions
+  - Decorative illustrations should use `aria-hidden="true"` to avoid screen reader noise
+- Landing page components live in `src/components/landing/` directory
+---
+
+## 2026-02-16 20:36 - US-027
+- Created `src/components/landing/Hero.astro` — landing page hero section with headline, subheadline, CTAs, and code card
+- Headline: "Orbiter" in Junicode serif font, responsive sizing (3.75rem → 4.5rem → 6rem at sm/lg breakpoints)
+- Subheadline: "A modern, modular multi-agent framework for Python" at 60% dark opacity
+- CTA buttons: "Get Started" (primary, links to /docs/getting-started/) and "View on GitHub" (bordered, links to GitHub repo)
+- Code card: quickstart weather agent example with window-chrome header (dots + python label), custom syntax highlighting using design-system colors
+- OrbiterHero illustration positioned behind content at 15% opacity with pointer-events disabled
+- Staggered heroEntrance animation: headline (0s), subheadline (0.15s), CTAs (0.3s), code card (0.45s)
+- prefers-reduced-motion: all animations disabled, content visible immediately
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/landing/Hero.astro (new), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - Landing page components go in `src/components/landing/` directory
+  - Hero code card uses manual syntax highlighting with `<span class="kw|fn|str|type|mod|decorator">` spans — not Shiki (since it's static inline HTML, not markdown-processed)
+  - Reuse `.code-block`, `.code-header`, `.code-header-dots` CSS classes from global.css for consistent window-chrome styling
+  - `heroEntrance` keyframe defined in global.css — use `animation-delay` via inline `style` for stagger
+  - OrbiterHero illustration at low opacity (15%) + `pointer-events: none` creates subtle background without interfering with interaction
+---
+
+## 2026-02-16 20:39 - US-028
+- Created `src/components/landing/FeatureCards.astro` — 6 feature cards in responsive grid showing Orbiter's key capabilities
+- Features: Composable Agents, Type-Safe Tools, Multi-Agent Swarms, Context Engine, Memory System, Provider Agnostic
+- Each card uses Card.astro component with custom inline SVG icon (stroke-based, design system colors), feature name heading, and description
+- Icons colored by accent: coral (Composable Agents, Context Engine), zen-blue (Type-Safe Tools, Memory System), zen-green (Multi-Agent Swarms, Provider Agnostic)
+- Icon containers: rounded-[0.625rem] squares with 10-12% color tint background
+- Section header: Junicode serif "Built for real-world agents" heading + subtitle
+- Responsive grid: 1-col mobile → 2-col at sm (640px) → 3-col at lg (1024px)
+- Each card has data-animate="reveal" with staggered data-delay="1" through "6"
+- Section follows section-divider pattern for consistent landing page spacing
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/landing/FeatureCards.astro (new), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - Card.astro accepts arbitrary data-* attributes via `[key: string]: any` rest props — pass data-animate/data-delay directly
+  - Icon pattern: inline SVG with stroke="currentColor", colored via parent `color` property on icon-wrap div
+  - `color-mix(in srgb, var(--color-coral) 10%, transparent)` for subtle icon background tints — use 10% for coral/blue, 12% for green (green needs slightly more to be visible on parchment)
+  - Section header pattern: Junicode serif h2 (2.25rem-2.5rem) + subtitle paragraph (1.125rem, 60% opacity, max-width 36rem centered)
+---
+
+## 2026-02-16 20:41 - US-029
+- Created `src/components/landing/CodeWalkthrough.astro` — tabbed code examples section with 3 tabs: Agent, Multi-Agent, Streaming
+- Tab switching via vanilla `<script>` toggling `is-active` class and `hidden` attribute on panels
+- Each tab shows Python code in window-chrome styled block (reusing global `.code-block`, `.code-header` CSS)
+- Code content: quickstart weather agent, swarm workflow DSL, streaming events with pattern matching
+- Active tab indicator: `border-bottom: 2px solid var(--color-coral)` with coral text color
+- Tabs keyboard-accessible: ArrowLeft/ArrowRight to navigate, Home/End for first/last, Enter/Space activates
+- ARIA attributes: `role="tablist"`, `role="tab"`, `role="tabpanel"`, `aria-selected`, `aria-controls`, `aria-labelledby`
+- `data-animate="fade"` on walkthrough container for scroll-triggered entrance
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/landing/CodeWalkthrough.astro (new), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - Tab pattern: `role="tablist"` + `role="tab"` buttons + `role="tabpanel"` divs — use `data-tab`/`data-panel` attributes for linking
+  - Active tab: toggle `is-active` class on both tab button and panel; set `hidden` attribute on inactive panels
+  - Keyboard nav: `ArrowRight`/`ArrowLeft` for next/prev tab, `Home`/`End` for first/last, `tabindex` toggles between `0` (active) and `-1` (inactive)
+  - Reuse `.code-block`, `.code-header`, `.code-header-dots`, `.dot-*`, `.code-header-lang` CSS classes from global.css for window-chrome code blocks
+  - Manual syntax highlighting with `.kw`, `.fn`, `.str`, `.type`, `.mod`, `.decorator`, `.cmt` span classes — same pattern as Hero code card
+  - Tab panels can use `:global(.code-block)` in scoped styles to override margin/border-radius for seamless integration with tab bar
+---
+
+## 2026-02-16 20:44 - US-030
+- Created `src/components/landing/PackageOverview.astro` — 13 package cards in responsive grid
+- Each card: monospace package name (coral), one-line description, arrow indicator, links to /docs/reference/{package}
+- Cards use Card.astro as `<a>` elements with hover animation (arrow shifts right and turns coral on hover)
+- Responsive grid: 1-col mobile → 2-col at sm (640px) → 3-col at lg (1024px)
+- Section follows standard section-divider pattern with Junicode serif heading + subtitle
+- Each card has data-animate="reveal" with staggered data-delay (modulo 6 for the 13 cards)
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/landing/PackageOverview.astro (new), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - Card.astro `as="a"` + `href` pattern renders the card as a clickable link element
+  - `:global(.card):hover .child` pattern in scoped styles targets child elements when the parent Card is hovered
+  - Use modulo for data-delay when cards exceed 6 (max stagger delay level): `(i % 6) + 1`
+  - Monospace font stack: `ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace`
+---
+
+## 2026-02-16 20:46 - US-031
+- Created `src/components/illustrations/ExecutionFlowDiagram.astro` — inline SVG showing the agent execution loop
+- Stages: User Input → Agent → LLM Call → Tool Execution → Response with loop arrow back to LLM Call
+- Dual layout: horizontal SVG (viewBox 880x200) shown at sm+ (640px), vertical SVG (viewBox 260x620) on mobile
+- Rounded rectangles (rx=12) colored by role: coral (User Input, Tool Execution), zen-blue (Agent, Response), zen-green (LLM Call)
+- Animated flow arrows via CSS `stroke-dashoffset` animation (`flow-dash` keyframe, 1.5s linear infinite)
+- Loop arrow (dashed) from Tool Execution back to LLM Call labeled "retry / continue"
+- Window chrome container reusing global `.code-header`, `.code-header-dots` CSS classes
+- Container uses `bg-subtle/80` background with border matching design system
+- `prefers-reduced-motion: reduce` disables dash animation, shows static arrows
+- All colors use CSS custom properties (theme-aware via `--zen-dark`, `--color-coral`, etc.)
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/illustrations/ExecutionFlowDiagram.astro (new)
+- **Learnings for future iterations:**
+  - SVG flow diagrams use dual `<svg>` elements (horizontal + vertical) with CSS media queries to toggle — simpler than making one SVG responsive
+  - `stroke-dashoffset` animation creates moving dashed lines: set `stroke-dasharray`, animate offset with `@keyframes`
+  - SVG `text` elements use `text-anchor: middle` + `dominant-baseline: central` for centered labels inside rects
+  - `color-mix()` works in SVG `fill` and `stroke` attributes when applied via CSS (not inline attributes)
+  - Reuse `.code-header` and `.code-header-dots` global CSS for window chrome wrapper on diagrams
+  - `writing-mode: vertical-rl` on SVG `text` for vertical labels (used for mobile loop label)
+---
+
+## 2026-02-16 20:48 - US-032
+- Created `src/components/landing/ArchitecturePreview.astro` — wraps ExecutionFlowDiagram with section heading and description
+- Created `src/components/landing/QuickLinks.astro` — 4 cards (Getting Started, Guides, API Reference, GitHub) with icons, descriptions, and arrow indicators
+- ArchitecturePreview: standard section-divider pattern, Junicode heading, subtitle, diagram in max-w-56rem container with `data-animate="fade"` + `data-delay="2"`
+- QuickLinks: 4 cards using Card.astro as `<a>` with inline SVG icons (Lucide-style), 2-col grid at sm+, each card has icon + name + description + arrow
+- QuickLinks cards: icon-wrap colored by accent (coral, blue, green), hover arrow animation (translateX + color change to coral)
+- External link (GitHub) has `target="_blank" rel="noopener noreferrer"`
+- Both sections follow section-divider pattern with data-animate for scroll-triggered entrance
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/landing/ArchitecturePreview.astro (new), src/components/landing/QuickLinks.astro (new), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - ArchitecturePreview is a thin wrapper around ExecutionFlowDiagram — just adds section heading/description and constrains width
+  - QuickLinks uses horizontal card layout (icon left, text right) via `flex` with `gap: 1rem` and `align-items: flex-start`
+  - `:global(.card):hover .child` pattern works for targeting child elements on Card hover (same as PackageOverview arrow pattern)
+  - Use `flex-shrink: 0` on icon-wrap to prevent icon from squishing when description text is long
+---
+
+## 2026-02-16 20:50 - US-033
+- Assembled complete landing page at `src/pages/index.astro` using LandingLayout
+- Renders all 6 sections in order: Hero, FeatureCards, CodeWalkthrough, PackageOverview, ArchitecturePreview, QuickLinks
+- Replaced placeholder Astro starter page with proper landing page
+- All sections already had section-divider class and data-animate attributes from their individual implementations
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/pages/index.astro
+- **Learnings for future iterations:**
+  - Landing page is just composition — all section-divider styling and scroll animation handled by LandingLayout and individual components
+  - LandingLayout handles Navbar + Footer + `section.section-divider` max-width/padding constraints
+  - Each landing section component is self-contained with its own section-divider class and data-animate attributes
+---
+
+## 2026-02-16 20:52 - US-034
+- Created `src/components/illustrations/DependencyGraph.astro` — inline SVG showing the 13-package dependency tree
+- Four layers: Foundation (orbiter-core), Extensions (models, context, memory, mcp, sandbox), Applications (cli, server, train, a2a, eval, trace), Meta (orbiter)
+- Dual layout: horizontal SVG (viewBox 820x440) shown at sm+ (640px), vertical SVG (viewBox 300x700) on mobile
+- Packages colored by layer: core/meta=coral, extensions=zen-blue, applications=zen-green
+- Dependency lines connect layers: faint lines between applications→extensions, regular lines between extensions→core, dashed coral lines from meta→applications
+- Window chrome container reusing global `.code-header`, `.code-header-dots` CSS classes
+- Layer labels (Foundation, Extensions, Applications) on desktop; centered labels on mobile
+- Mobile layout: 2-column grid for applications and extensions, with legend at bottom
+- `prefers-reduced-motion` respected (diagram is static, but future-proofed)
+- All colors via CSS custom properties (theme-aware)
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/illustrations/DependencyGraph.astro (new), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - The 13 packages are: core, models, context, memory, mcp, sandbox, trace, eval, a2a, cli, server, train, orbiter (meta)
+  - Package names use monospace font (`ui-monospace, SFMono-Regular, ...`) to look like package names
+  - Dependency graph doc (`docs-source/architecture/dependency-graph.md`) mentions `ralph` but PackageOverview uses `trace` — follow PackageOverview as canonical
+  - Static SVG diagrams don't need animation, but include `prefers-reduced-motion` guard for future-proofing
+  - Dual SVG layout pattern (horizontal + vertical + media queries) is consistent with ExecutionFlowDiagram
+---
+
+## 2026-02-16 20:55 - US-035
+- Created `src/components/illustrations/SwarmModeDiagram.astro` — 3 small SVGs in a 3-col grid showing swarm execution modes
+- Workflow mode: linear chain A → B → C with sequential arrows
+- Handoff mode: central Router agent with arrows radiating to 3 specialist agents (Coder, Writer, Analyst)
+- Team mode: Lead agent at top with bidirectional arrows to 3 worker agents (W1, W2, W3), return arrows dashed
+- 3-col grid at sm+ (640px), single column on mobile
+- Animated directional arrows via CSS `stroke-dashoffset` animation (`swarm-flow-dash` keyframe)
+- Return arrows in Team mode use dashed stroke at reduced opacity for visual hierarchy
+- Window chrome headers on each card reusing global `.code-header` CSS
+- All colors via CSS custom properties (theme-aware)
+- `prefers-reduced-motion: reduce` disables dash animation, shows static arrows
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/illustrations/SwarmModeDiagram.astro (new), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - Swarm diagrams use a 3-card grid layout (not dual horizontal/vertical SVGs) since each diagram is small enough to stay readable on mobile
+  - Return/feedback arrows: use lighter stroke (12% opacity) + dashed pattern to differentiate from primary flow arrows
+  - Each swarm card is a self-contained window-chrome container — reuse `.code-header`, `.code-header-dots`, `.dot-*` global CSS classes
+  - For small diagrams, single viewBox per mode is sufficient — no need for dual layout pattern
+---
+
+## 2026-02-16 20:57 - US-036
+- Created `src/components/illustrations/ContextEngineDiagram.astro` — tree SVG showing the Context object hierarchy
+- Context at root branching to 7 children: State, PromptBuilder, Processors, Workspace, KnowledgeStore, Checkpoint, TokenTracker
+- Dual layout: horizontal tree (viewBox 820x280) for desktop (sm+), vertical tree (viewBox 260x620) for mobile
+- Nodes colored by role: coral (Context root, TokenTracker), zen-blue (State, PromptBuilder, KnowledgeStore), zen-green (Processors, Workspace, Checkpoint)
+- Descriptive sub-labels below each child node explaining purpose (e.g., "Key-value store", "RAG storage")
+- Child node labels use monospace font to match code/package naming convention
+- Desktop layout: tree lines branch from root down to horizontal bar, then down to each child; Workspace and Checkpoint on second row
+- Mobile layout: vertical trunk line with horizontal branches to left-aligned nodes, descriptions on right
+- Window chrome container reusing global `.code-header`, `.code-header-dots` CSS classes
+- `prefers-reduced-motion: reduce` disables any transitions
+- `aria-hidden="true"` on SVGs (decorative illustration)
+- Typecheck: 0 errors, Build: 154 pages, zero errors
+- Files changed: src/components/illustrations/ContextEngineDiagram.astro (new), prd.json, progress.txt
+- **Learnings for future iterations:**
+  - Tree diagram pattern: root node at top, connecting `<path>` lines (L-shaped for branches), children below
+  - For tree lines, use `<path>` with L-shaped segments (e.g., `M x1 y1 L x1 y2 L x2 y2 L x2 y3`) for clean right-angle connections
+  - Mobile vertical tree: single trunk line (`tree-trunk` class) with horizontal branch lines to nodes — simpler than the horizontal branching layout
+  - Sub-labels at 40% dark opacity, 10-11px font size, provide context without visual clutter
+  - Monospace font for child labels (`node-label-sm`) matches code/API naming conventions in technical diagrams
+---
+
+## 2026-02-16 20:58 - US-037
+- Updated `package.json` build script to `astro build && npx pagefind --site dist`
+- Pagefind indexes all 154 pages (8,664 words) into `dist/pagefind/`
+- Pagefind JS/CSS is NOT loaded eagerly — no references in built HTML files
+- Search index produces 154 fragment files and 12 index files
+- Files changed: package.json
+- **Learnings for future iterations:**
+  - Pagefind runs as a post-build step via `npx pagefind --site dist` — indexes all HTML in the dist directory
+  - Pagefind output goes to `dist/pagefind/` — includes `pagefind.js`, `pagefind-ui.js`, `pagefind-ui.css`, fragment files, and index files
+  - Without `data-pagefind-body` attributes, Pagefind indexes all `<body>` content (fine for docs sites)
+  - Pagefind is a devDependency (`pagefind@^1`) — only used at build time, not shipped to client
+  - To lazy-load Pagefind at runtime: `const pagefind = await import('/pagefind/pagefind.js')` — SearchModal (US-038) will use this
+---
+
+## 2026-02-16 21:03 - US-038
+- Created `src/components/SearchModal.astro` — search modal overlay with live Pagefind-powered results
+- Triggered by Cmd+K / Ctrl+K keyboard shortcut or click on `#search-trigger` button in Navbar
+- Modal: centered container (max-w-36rem), backdrop-blur overlay, full-screen on mobile viewports
+- Search input: large text, autofocus, "Search documentation..." placeholder, Esc badge
+- Live results via Pagefind API, debounced 150ms, showing up to 8 results
+- Results display: page title, section breadcrumb (from URL path), content excerpt with Pagefind `<mark>` highlights (coral tint)
+- Keyboard navigation: ArrowDown/ArrowUp cycle through results, Enter opens selected, Escape closes
+- Close on backdrop click or Escape key
+- ARIA attributes: `role="dialog"`, `role="listbox"`, `role="option"`, `aria-selected`, `aria-activedescendant`
+- Integrated SearchModal into BaseLayout (renders on all pages, lazy-loads Pagefind only when opened)
+- Script uses `is:inline` to avoid Vite bundling the Pagefind dynamic import
+- Typecheck: 0 errors, Build: 154 pages + Pagefind index, zero errors
+- Files changed: src/components/SearchModal.astro (new), src/layouts/BaseLayout.astro (modified)
+- **Learnings for future iterations:**
+  - Pagefind dynamic import MUST use `is:inline` script — Vite/Rollup cannot resolve `/pagefind/pagefind.js` at build time since it's generated post-build
+  - `is:inline` scripts in Astro are not processed through Vite — no TypeScript, no bundling, no tree-shaking; must write plain JavaScript
+  - SearchModal at z-index 100, above Navbar (30) and MobileDrawer (40-50) — ensures modal overlays everything
+  - `document.body.style.overflow = 'hidden'` prevents background scroll when modal is open; reset to `''` on close
+  - Pagefind results have `meta.title`, `url`, `excerpt` (with `<mark>` tags for highlights) — excerpt is already HTML-safe from Pagefind
+  - `await pagefind.init()` must be called after import before `pagefind.search()` — handles internal WASM initialization
+  - Scoped `<style>` in Astro uses data attributes (not class name hashing) — safe to toggle classes like `is-open` from inline scripts
+---
+
+## 2026-02-16 21:10 - US-039
+- Created `src/pages/404.astro` — friendly 404 page with "Lost in orbit" heading
+- Uses BaseLayout with Navbar at top and Footer at bottom
+- Heading in Junicode serif font, descriptive message, and link back to /docs/getting-started/
+- Simplified orbital decoration: 3 concentric ring borders + 2 colored dots (coral, zen-blue) at reduced opacity
+- Orbital decoration positioned behind content with pointer-events disabled
+- Works in both light and dark mode via CSS custom properties (--zen-dark, --zen-paper, --color-coral)
+- Responsive: heading scales up at sm+ breakpoint, orbital decoration grows
+- Typecheck: 0 errors, Build: 155 pages (154 docs + 404), zero errors
+- Files changed: src/pages/404.astro (new)
+- **Learnings for future iterations:**
+  - 404 page uses BaseLayout + Navbar + Footer directly (not DocsLayout or LandingLayout) — no sidebar/TOC needed
+  - Simplified version of OrbiterHero: just static ring borders + dots, no animations, no JS
+  - `min-height: calc(100vh - 3.5rem - 200px)` accounts for navbar height (3.5rem) and approximate footer height
+  - `color-mix()` at low percentages (10%, 30%, 40%) creates ghost-like decorative elements that don't distract from content
+---
+
+## 2026-02-16 21:10 - US-040
+- Created `public/favicon.svg`: Orbiter logo — stylized 'O' (coral circle stroke) with tilted orbital ellipse ring and orbiting dot, all in coral (#F76F53)
+- Generated `public/favicon.ico`: 32x32 ICO from SVG using rsvg-convert + ImageMagick
+- Created `public/og-image.png`: 1200x630 social sharing image with warm parchment gradient, Orbiter wordmark, subtitle, decorative orbital rings, and orbiter.dev URL
+- SEOHead already references all three assets correctly (favicon.svg, favicon.ico, og-image.png in OG/Twitter meta)
+- Replaced default Astro favicon with Orbiter-branded version
+- Files changed: public/favicon.svg (modified), public/favicon.ico (modified), public/og-image.png (new)
+- **Learnings for future iterations:**
+  - `rsvg-convert -w W -h H input.svg -o output.png` for SVG→PNG conversion
+  - `magick input.png output.ico` for PNG→ICO conversion via ImageMagick
+  - OG images should be 1200x630px for optimal social media display
+  - SVG favicons support CSS media queries (prefers-color-scheme) for light/dark adaptation — could be added later
+  - SEOHead component already had all favicon and OG image references wired up from US-024
+---
+
+## 2026-02-16 21:10 - US-041
+- Full build verification: 155 pages built in ~2.75s (1.59s Astro + 1.16s Pagefind), zero errors
+- 155 HTML files generated (153 docs + 404 + index), exceeding the 153+ requirement
+- Comprehensive broken link check: scanned all 42,691 internal links across 155 pages
+- Found and fixed 2 broken links in Footer component: `/docs/reference/changelog` → `/docs/changelog`, `/docs/reference/migration` → `/docs/migration-guide`
+- Remark plugins verified: title extraction (153/153 pages), link rewriting (0 raw .md hrefs), callouts (plugin functional, no callout syntax used in source)
+- Navigation titles: all 153 pages have proper titles in sidebar, no "undefined" or empty entries
+- Code blocks: 1,777 blocks with Shiki syntax highlighting across 149 pages, all with window chrome headers and copy buttons
+- Typecheck: 0 errors (3 hints only)
+- Build time: ~2.75s, well under 30-second requirement
+- Files changed: src/components/Footer.astro (fixed broken resource links)
+- **Learnings for future iterations:**
+  - Footer resource links must point to actual doc paths: `/docs/changelog` and `/docs/migration-guide` (NOT under `/docs/reference/`)
+  - A Node.js script scanning `href=` attributes in built HTML is an effective way to catch all broken internal links
+  - Build produces 155 HTML files: 153 from docs-source/ collection + 404.astro + index.astro
+  - Pagefind indexes 155 pages (8,670 words) with 12 index files and 155 fragment files
+---
+
+## 2026-02-16 21:20 - US-042
+- Performance and accessibility audit completed
+- Added `:focus-visible` styles (coral outline, 2px offset) to all interactive elements across 8 components:
+  - MobileDrawer: hamburger button, close button
+  - Footer: all footer links
+  - Sidebar: navigation links
+  - Navbar: nav links, logo link
+  - TableOfContents: TOC links
+  - PrevNext: prev/next cards
+  - Breadcrumbs: breadcrumb links
+  - global.css: prose content links
+- Added `<noscript>` fallback in BaseLayout:
+  - `[data-animate]` elements visible at `opacity: 1` (prevents invisible content without JS)
+  - `.code-copy-btn` hidden (non-functional without JS)
+  - CSS-only dark mode via `@media (prefers-color-scheme: dark)` overriding CSS custom properties
+  - Shiki dark theme colors applied via `var(--shiki-dark)` for code blocks
+- Verified all icon-only buttons already have `aria-label` attributes (6/6)
+- Verified `prefers-reduced-motion` already disables all animations globally via `global.css`
+- Total JS shipped: ~9.5KB inline per page (0 external JS files), well under 20KB
+- Build: 155 pages in ~1.58s + 1.17s Pagefind, zero errors
+- Typecheck: 0 errors (3 hints only)
+- Files changed: src/components/Breadcrumbs.astro, src/components/Footer.astro, src/components/MobileDrawer.astro, src/components/Navbar.astro, src/components/PrevNext.astro, src/components/Sidebar.astro, src/components/TableOfContents.astro, src/layouts/BaseLayout.astro, src/styles/global.css
+- **Learnings for future iterations:**
+  - Focus ring pattern: `outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent); outline-offset: 2px;` on `:focus-visible` — consistent across all components
+  - `<noscript><style>` in `<head>` is the right way to handle no-JS fallbacks for CSS-dependent features
+  - Astro `is:inline` scripts run even without framework JS, but truly JS-disabled browsers skip them too
+  - `@media (prefers-color-scheme: dark)` on `:root` inside `<noscript>` provides dark mode when theme-detection JS can't run
+  - Shiki dual-theme code blocks need `var(--shiki-dark)` override in no-JS dark mode since the JS-based `data-theme` attribute won't be set
+---

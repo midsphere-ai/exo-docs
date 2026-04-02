@@ -1,0 +1,68 @@
+---
+import Breadcrumbs from './Breadcrumbs.astro';
+
+interface Props {
+  slug: string;
+  title: string;
+  description?: string;
+}
+
+const { slug, title, description } = Astro.props;
+---
+
+<div class="page-header" data-animate="reveal">
+  <Breadcrumbs slug={slug} title={title} />
+
+  <div class="accent-bar" aria-hidden="true"></div>
+
+  <h1 class="page-title">{title}</h1>
+
+  {description && (
+    <p class="page-description">{description}</p>
+  )}
+
+  <div class="header-divider" aria-hidden="true"></div>
+</div>
+
+<style>
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .accent-bar {
+    width: 3rem;
+    height: 4px;
+    background: var(--color-coral);
+    border-radius: 2px;
+    margin-bottom: 0.75rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--zen-dark);
+    line-height: 1.2;
+    margin: 0 0 0.5rem;
+  }
+
+  .page-description {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--zen-dark) 60%, transparent);
+    margin: 0 0 1.25rem;
+    max-width: 40rem;
+  }
+
+  .header-divider {
+    height: 1px;
+    background: color-mix(in srgb, var(--zen-dark) 8%, transparent);
+    margin-top: 1.25rem;
+  }
+
+  @media (min-width: 1024px) {
+    .page-title {
+      font-size: 2.25rem;
+    }
+  }
+</style>
