@@ -68,7 +68,7 @@ export default function remarkRewriteLinks() {
       }
 
       // Build the final absolute route
-      node.url = '/docs' + (route ? '/' + route : '') + anchor;
+      node.url = '/' + route + anchor;
     });
   };
 }

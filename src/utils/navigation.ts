@@ -125,7 +125,7 @@ export async function buildNavTree(): Promise<NavSection[]> {
         slug,
         title,
         order,
-        href: `/docs/${slug}`,
+        href: `/${slug}`,
       });
     } else if (segments.length === 2) {
       // Direct child of a top-level section: getting-started/quickstart
@@ -137,7 +137,7 @@ export async function buildNavTree(): Promise<NavSection[]> {
         slug,
         title,
         order,
-        href: `/docs/${slug}`,
+        href: `/${slug}`,
       });
     } else {
       // Nested: guides/context/state -> section=guides, subsection=guides/context
@@ -154,7 +154,7 @@ export async function buildNavTree(): Promise<NavSection[]> {
         slug,
         title,
         order,
-        href: `/docs/${slug}`,
+        href: `/${slug}`,
       });
     }
   }

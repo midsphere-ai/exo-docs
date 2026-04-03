@@ -49,7 +49,7 @@ for (const section of navTree) {
 }
 
 // Find current page index
-const currentHref = slug ? `/docs/${slug}` : '/docs';
+const currentHref = slug ? `/${slug}` : '/';
 const currentIndex = flatList.findIndex((item) => item.href === currentHref);
 
 const prev = currentIndex > 0 ? flatList[currentIndex - 1] : null;

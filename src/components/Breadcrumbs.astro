@@ -30,7 +30,7 @@ interface Crumb {
   href?: string;
 }
 
-const crumbs: Crumb[] = [{ label: 'Home', href: '/docs' }];
+const crumbs: Crumb[] = [{ label: 'Home', href: '/' }];
 
 if (slug) {
   const segments = slug.split('/');
@@ -45,7 +45,7 @@ if (slug) {
     if (isLast) {
       crumbs.push({ label });
     } else {
-      crumbs.push({ label, href: `/docs/${path}` });
+      crumbs.push({ label, href: `/${path}` });
     }
   }
 }
