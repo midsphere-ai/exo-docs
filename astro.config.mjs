@@ -10,7 +10,7 @@ import rehypeCodeBlocks from './src/plugins/rehype-code-blocks.ts';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://orbiter.dev',
+  site: 'https://exo.midsphere.ai',
   integrations: [sitemap()],
   markdown: {
     remarkPlugins: [remarkExtractTitle, remarkExtractDescription, remarkRewriteLinks, remarkCallouts],

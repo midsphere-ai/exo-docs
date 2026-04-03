@@ -7,7 +7,7 @@ export function generateOrganizationJsonLd(siteUrl: string) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Orbiter",
+    name: "Exo",
     url: siteUrl,
     logo: `${siteUrl}/favicon.svg`,
     description:
@@ -30,7 +30,7 @@ export function generateTechArticleJsonLd(options: {
     ...(options.dateModified && { dateModified: options.dateModified }),
     author: {
       "@type": "Organization",
-      name: "Orbiter",
+      name: "Exo",
     },
   };
 }

@@ -1,12 +1,12 @@
 # Agents
 
-Agents are the core building block in Orbiter. Each agent wraps an LLM model, a set of tools, optional handoff targets, and lifecycle hooks. When executed, an agent runs an LLM-tool loop: it calls the LLM, executes any requested tool calls in parallel, feeds the results back, and repeats until the LLM produces a text-only response or the step limit is reached.
+Agents are the core building block in Exo. Each agent wraps an LLM model, a set of tools, optional handoff targets, and lifecycle hooks. When executed, an agent runs an LLM-tool loop: it calls the LLM, executes any requested tool calls in parallel, feeds the results back, and repeats until the LLM produces a text-only response or the step limit is reached.
 
 ## Basic Usage
 
 ```python
-from orbiter.agent import Agent
-from orbiter.tool import tool
+from exo.agent import Agent
+from exo.tool import tool
 
 @tool
 def get_weather(city: str) -> str:
@@ -24,7 +24,7 @@ agent = Agent(
 To execute an agent, use `run()` (see [Running Agents](running.md)):
 
 ```python
-from orbiter.runner import run
+from exo.runner import run
 
 result = await run(agent, "What's the weather in Tokyo?")
 print(result.output)
@@ -48,6 +48,25 @@ All parameters are keyword-only. Only `name` is required.
 | `max_tokens` | `int \| None` | `None` | Maximum output tokens per LLM call |
 | `memory` | `Any` | `None` | Optional memory store for persistent memory |
 | `context` | `Any` | `None` | Optional context engine for hierarchical state |
+
+## Planner Phase
+
+When `planning_enabled=True`, Exo runs an ephemeral planner pass before the executor phase. The planner sees the same tool set as the executor, but its transcript stays separate from the executor conversation. Only the final planner text is injected back into the executor context together with the original task.
+
+If you set `planning_model` or `planning_instructions`, those values apply only to the planner. When they are unset, Exo falls back to the executor model and instructions.
+
+```python
+from exo.agent import Agent
+
+agent = Agent(
+    name="researcher",
+    model="openai:gpt-4o",
+    instructions="Execute the task.",
+    planning_enabled=True,
+    planning_model="openai:gpt-4o-mini",
+    planning_instructions="Return a short numbered plan before acting.",
+)
+```
 
 ## Dynamic Instructions
 
@@ -93,8 +112,8 @@ print(agent.describe())
 Tools are indexed by name for O(1) lookup. Duplicate tool names raise `AgentError`:
 
 ```python
-from orbiter.agent import Agent, AgentError
-from orbiter.tool import tool
+from exo.agent import Agent, AgentError
+from exo.tool import tool
 
 @tool
 def greet(name: str) -> str:
@@ -143,14 +162,14 @@ output = await agent.run(
 # output is an AgentOutput with .text, .tool_calls, .usage
 ```
 
-In most cases, you should use the top-level `run()` function from `orbiter.runner` instead, which adds state tracking, loop detection, and auto-resolved providers. See [Running Agents](running.md).
+In most cases, you should use the top-level `run()` function from `exo.runner` instead, which adds state tracking, loop detection, and auto-resolved providers. See [Running Agents](running.md).
 
 ## AgentConfig
 
-For serializable configuration, use `AgentConfig` from `orbiter.config`:
+For serializable configuration, use `AgentConfig` from `exo.config`:
 
 ```python
-from orbiter.config import AgentConfig
+from exo.config import AgentConfig
 
 config = AgentConfig(
     name="my_agent",
@@ -158,6 +177,11 @@ config = AgentConfig(
     instructions="Be helpful.",
     temperature=0.7,
     max_steps=5,
+    planning_enabled=True,
+    planning_model="openai:gpt-4o-mini",
+    budget_awareness="limit:70",
+    hitl_tools=["deploy_service"],
+    injected_tool_args={"ui_request_id": "Opaque UI correlation id"},
 )
 ```
 
@@ -169,10 +193,54 @@ config = AgentConfig(
 | `temperature` | `float` | `1.0` (range: 0.0-2.0) |
 | `max_tokens` | `int \| None` | `None` |
 | `max_steps` | `int` | `10` (min: 1) |
+| `planning_enabled` | `bool` | `False` |
+| `planning_model` | `str \| None` | `None` |
+| `planning_instructions` | `str` | `""` |
+| `budget_awareness` | `str \| None` | `None` (`per-message` or `limit:<0-100>`) |
+| `hitl_tools` | `list[str]` | `[]` |
+| `emit_mcp_progress` | `bool` | `True` |
+| `injected_tool_args` | `dict[str, str]` | `{}` |
+| `allow_parallel_subagents` | `bool` | `False` |
+| `max_parallel_subagents` | `int` | `3` (range: 1-7) |
+
+## Live Message Injection
+
+The `inject_message()` method pushes a user message into a running agent's context. The message is picked up before the next LLM call, letting external code steer or augment the agent mid-run without cancelling.
+
+```python
+import asyncio
+from exo import Agent, run, tool
+
+@tool
+def slow_search(query: str) -> str:
+    """Search that takes time."""
+    return f"Results for {query}"
+
+agent = Agent(name="researcher", tools=[slow_search])
+
+async def main():
+    task = asyncio.create_task(run(agent, "Search for Python tutorials"))
+
+    # Inject additional context while the agent is running
+    await asyncio.sleep(0.1)
+    agent.inject_message("Also check the official Python docs")
+
+    result = await task
+    print(result.output)
+```
+
+Key points:
+- Messages are drained in FIFO order before each LLM call
+- Injected messages never break provider message compliance (they appear after tool results, before the next LLM call)
+- Raises `ValueError` if content is empty
+- Safe to call from any coroutine in the same event loop
+- In streaming mode (`run.stream()`), each injection emits a `MessageInjectedEvent`
+
+For full details and streaming examples, see [Streaming Events > Live Message Injection](streaming-events.md#live-message-injection).
 
 ## Error Handling
 
-Agent errors raise `AgentError`, a subclass of `OrbiterError`:
+Agent errors raise `AgentError`, a subclass of `ExoError`:
 
 - **Duplicate tools:** Registering two tools with the same name
 - **Duplicate handoffs:** Registering two handoff targets with the same name
@@ -181,7 +249,7 @@ Agent errors raise `AgentError`, a subclass of `OrbiterError`:
 - **Context length exceeded:** Input exceeds the model's context window
 
 ```python
-from orbiter.agent import Agent, AgentError
+from exo.agent import Agent, AgentError
 
 try:
     result = await agent.run("Hello", provider=None)
@@ -193,8 +261,8 @@ except AgentError as e:
 
 | Symbol | Module | Description |
 |--------|--------|-------------|
-| `Agent` | `orbiter.agent` | Core agent class |
-| `AgentError` | `orbiter.agent` | Agent-level error |
-| `AgentConfig` | `orbiter.config` | Serializable agent configuration |
-| `AgentOutput` | `orbiter.types` | Output from a single LLM call |
-| `RunResult` | `orbiter.types` | Final result of `run()` |
+| `Agent` | `exo.agent` | Core agent class |
+| `AgentError` | `exo.agent` | Agent-level error |
+| `AgentConfig` | `exo.config` | Serializable agent configuration |
+| `AgentOutput` | `exo.types` | Output from a single LLM call |
+| `RunResult` | `exo.types` | Final result of `run()` |

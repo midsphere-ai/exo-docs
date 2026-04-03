@@ -301,7 +301,7 @@
   .search-backdrop {
     position: fixed;
     inset: 0;
-    background: color-mix(in srgb, var(--zen-dark) 20%, transparent);
+    background: color-mix(in srgb, var(--ms-dark) 20%, transparent);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
   }
@@ -311,12 +311,12 @@
     width: 100%;
     max-width: 36rem;
     margin: 0 1rem;
-    background: var(--zen-paper);
-    border: 1px solid var(--zen-border);
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-border);
     border-radius: 0.75rem;
     box-shadow:
-      0 25px 50px -12px color-mix(in srgb, var(--zen-dark) 25%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--zen-dark) 5%, transparent);
+      0 25px 50px -12px color-mix(in srgb, var(--ms-dark) 25%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--ms-dark) 5%, transparent);
     overflow: hidden;
     max-height: 70vh;
     display: flex;
@@ -340,7 +340,7 @@
   }
 
   .search-header {
-    border-bottom: 1px solid var(--zen-border);
+    border-bottom: 1px solid var(--ms-border);
     flex-shrink: 0;
   }
 
@@ -353,14 +353,14 @@
 
   .search-icon {
     flex-shrink: 0;
-    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 40%, transparent);
   }
 
   .search-input {
     flex: 1;
     border: none;
     background: none;
-    color: var(--zen-dark);
+    color: var(--ms-dark);
     font-size: 1.0625rem;
     font-family: inherit;
     font-weight: 500;
@@ -368,7 +368,7 @@
   }
 
   .search-input::placeholder {
-    color: color-mix(in srgb, var(--zen-dark) 35%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 35%, transparent);
   }
 
   .search-esc {
@@ -376,9 +376,9 @@
     font-family: inherit;
     font-size: 0.6875rem;
     font-weight: 500;
-    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
-    background: color-mix(in srgb, var(--zen-dark) 6%, transparent);
-    border: 1px solid var(--zen-border);
+    color: color-mix(in srgb, var(--ms-dark) 40%, transparent);
+    background: color-mix(in srgb, var(--ms-dark) 6%, transparent);
+    border: 1px solid var(--ms-border);
     border-radius: 0.25rem;
     padding: 0.125rem 0.375rem;
     line-height: 1.4;
@@ -393,7 +393,7 @@
   .search-no-results {
     padding: 2.5rem 1rem;
     text-align: center;
-    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 40%, transparent);
     font-size: 0.9375rem;
   }
 
@@ -411,7 +411,7 @@
 
   .search-results-list :global(.search-result-item.is-active),
   .search-results-list :global(.search-result-item:hover) {
-    background: color-mix(in srgb, var(--zen-dark) 5%, transparent);
+    background: color-mix(in srgb, var(--ms-dark) 5%, transparent);
   }
 
   .search-results-list :global(.search-result-link) {
@@ -425,25 +425,25 @@
 
   .search-results-list :global(.search-result-title) {
     font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--zen-dark);
+    font-weight: 500;
+    color: var(--ms-dark);
   }
 
   .search-results-list :global(.search-result-breadcrumb) {
     font-size: 0.75rem;
-    color: color-mix(in srgb, var(--zen-dark) 45%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 45%, transparent);
   }
 
   .search-results-list :global(.search-result-excerpt) {
     font-size: 0.8125rem;
     line-height: 1.5;
-    color: color-mix(in srgb, var(--zen-dark) 60%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 60%, transparent);
   }
 
   /* Pagefind highlight marks */
   .search-results-list :global(.search-result-excerpt mark) {
-    background: color-mix(in srgb, var(--color-coral) 20%, transparent);
-    color: var(--color-coral);
+    background: color-mix(in srgb, var(--ms-blue) 20%, transparent);
+    color: var(--ms-blue);
     border-radius: 0.125rem;
     padding: 0 0.125rem;
   }

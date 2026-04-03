@@ -37,8 +37,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   .heading {
     font-size: 3rem;
-    font-weight: 700;
-    color: var(--zen-dark);
+    font-weight: 400;
+    color: var(--ms-dark);
     margin: 0 0 1rem;
     letter-spacing: -0.02em;
   }
@@ -46,7 +46,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .message {
     font-size: 1.0625rem;
     line-height: 1.6;
-    color: color-mix(in srgb, var(--zen-dark) 60%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 60%, transparent);
     margin: 0 0 2rem;
   }
 
@@ -56,21 +56,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     gap: 0.5rem;
     font-size: 0.9375rem;
     font-weight: 500;
-    color: var(--color-coral);
+    color: var(--ms-blue);
     text-decoration: none;
     padding: 0.625rem 1.25rem;
-    border: 1.5px solid color-mix(in srgb, var(--color-coral) 30%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--ms-blue) 30%, transparent);
     border-radius: 0.75rem;
     transition: background-color 0.2s, border-color 0.2s;
   }
 
   .back-link:hover {
-    background: color-mix(in srgb, var(--color-coral) 6%, transparent);
-    border-color: color-mix(in srgb, var(--color-coral) 50%, transparent);
+    background: color-mix(in srgb, var(--ms-blue) 6%, transparent);
+    border-color: color-mix(in srgb, var(--ms-blue) 50%, transparent);
   }
 
   .back-link:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+    outline: 2px solid color-mix(in srgb, var(--ms-blue) 50%, transparent);
     outline-offset: 2px;
   }
 

@@ -2,17 +2,17 @@
 
 ## Requirements
 
-- **Python 3.11+** -- Orbiter uses modern Python features (`types.UnionType`, `asyncio.TaskGroup`, `ExceptionGroup`) that require Python 3.11 or later.
+- **Python 3.11+** -- Exo uses modern Python features (`types.UnionType`, `asyncio.TaskGroup`, `ExceptionGroup`) that require Python 3.11 or later.
 - **An LLM API key** -- At minimum, you need an API key from OpenAI or Anthropic.
 
 ## Install with pip
 
 ### Meta-package (recommended)
 
-The `orbiter` meta-package installs orbiter-core plus all standard extras:
+The `exo` meta-package installs exo-core plus all standard extras:
 
 ```bash
-pip install git+https://github.com/Midsphere-AI/orbiter-ai.git
+pip install exo
 ```
 
 ### Minimal install
@@ -20,7 +20,7 @@ pip install git+https://github.com/Midsphere-AI/orbiter-ai.git
 If you only need the core agent framework (Agent, Tool, Runner, Swarm) without LLM provider packages:
 
 ```bash
-pip install "orbiter-core @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-core"
+pip install exo-core
 ```
 
 ### With LLM providers
@@ -28,8 +28,7 @@ pip install "orbiter-core @ git+https://github.com/Midsphere-AI/orbiter-ai.git#s
 To use OpenAI and Anthropic models, add the models package:
 
 ```bash
-pip install "orbiter-core @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-core" \
-  "orbiter-models @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-models"
+pip install exo-core exo-models
 ```
 
 ### Individual packages
@@ -37,18 +36,18 @@ pip install "orbiter-core @ git+https://github.com/Midsphere-AI/orbiter-ai.git#s
 Install only what you need:
 
 ```bash
-pip install "orbiter-core @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-core"
-pip install "orbiter-models @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-models"
-pip install "orbiter-context @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-context"
-pip install "orbiter-memory @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-memory"
-pip install "orbiter-mcp @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-mcp"
-pip install "orbiter-trace @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-trace"
-pip install "orbiter-eval @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-eval"
-pip install "orbiter-sandbox @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-sandbox"
-pip install "orbiter-a2a @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-a2a"
-pip install "orbiter-cli @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-cli"
-pip install "orbiter-server @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-server"
-pip install "orbiter-train @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-train"
+pip install exo-core       # Agent, Tool, Runner, Swarm, Config, Events, Hooks
+pip install exo-models     # OpenAI + Anthropic providers
+pip install exo-context    # Context engine, neurons, prompt builder
+pip install exo-memory     # Short/long-term memory, vector search
+pip install exo-mcp        # Model Context Protocol client/server
+pip install exo-trace      # OpenTelemetry tracing
+pip install exo-eval       # Evaluators, scorers, reflection
+pip install exo-sandbox    # Sandboxed execution environments
+pip install exo-a2a        # Agent-to-Agent protocol
+pip install exo-cli        # CLI entry point
+pip install exo-server     # FastAPI server + WebSocket streaming
+pip install exo-train      # Trajectory dataset + trainers
 ```
 
 ## Environment Variables
@@ -66,7 +65,7 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 You can also pass API keys programmatically when constructing a provider:
 
 ```python
-from orbiter.models.provider import get_provider
+from exo.models.provider import get_provider
 
 provider = get_provider("openai:gpt-4o", api_key="sk-...")
 ```
@@ -75,11 +74,11 @@ Or set them in a `.env` file and load with your preferred method (e.g., `python-
 
 ## Development Setup (UV Workspace)
 
-If you want to contribute to Orbiter or work with the full monorepo:
+If you want to contribute to Exo or work with the full monorepo:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Midsphere-AI/orbiter-ai.git && cd orbiter-ai
+git clone https://github.com/inclusionAI/AWorld && cd AWorld
 
 # Install UV if you don't have it
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -88,7 +87,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync
 
 # Verify the installation
-uv run python -c "from orbiter import Agent, run, tool; print('OK')"
+uv run python -c "from exo import Agent, run, tool; print('OK')"
 ```
 
 ### Running Tests
@@ -98,8 +97,8 @@ uv run python -c "from orbiter import Agent, run, tool; print('OK')"
 uv run pytest
 
 # Run tests for a specific package
-uv run pytest packages/orbiter-core/tests/
-uv run pytest packages/orbiter-models/tests/
+uv run pytest packages/exo-core/tests/
+uv run pytest packages/exo-models/tests/
 
 # Run with verbose output
 uv run pytest -v
@@ -112,8 +111,8 @@ uv run pytest -v
 uv run ruff check packages/
 
 # Type-check with pyright
-uv run pyright packages/orbiter-core/
-uv run pyright packages/orbiter-models/
+uv run pyright packages/exo-core/
+uv run pyright packages/exo-models/
 ```
 
 ## Verify Your Installation
@@ -121,7 +120,7 @@ uv run pyright packages/orbiter-models/
 Run this minimal script to confirm everything is working:
 
 ```python
-from orbiter import Agent, tool
+from exo import Agent, tool
 
 @tool
 def hello(name: str) -> str:

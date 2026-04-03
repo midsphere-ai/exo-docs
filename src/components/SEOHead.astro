@@ -20,11 +20,11 @@ const {
   breadcrumbs = [],
 } = Astro.props;
 
-const siteUrl = Astro.site?.toString().replace(/\/$/, "") || "https://orbiter.dev";
+const siteUrl = Astro.site?.toString().replace(/\/$/, "") || "https://exo.midsphere.ai";
 const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
 const ogImageUrl = `${siteUrl}/og-image.png`;
 
-const formattedTitle = type === "landing" ? "Orbiter" : `${title} - Orbiter Docs`;
+const formattedTitle = type === "landing" ? "Exo" : `${title} - Exo Docs`;
 
 const jsonLdScripts: object[] = [];
 

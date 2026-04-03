@@ -96,7 +96,7 @@ const next = currentIndex >= 0 && currentIndex < flatList.length - 1 ? flatList[
     gap: 1rem;
     margin-top: 3rem;
     padding-top: 2rem;
-    border-top: 1px solid var(--zen-border);
+    border-top: 1px solid var(--ms-border);
   }
 
   .prev-next-card {
@@ -104,7 +104,7 @@ const next = currentIndex >= 0 && currentIndex < flatList.length - 1 ? flatList[
     flex-direction: column;
     gap: 0.25rem;
     padding: 1rem;
-    border: 1px solid var(--zen-border);
+    border: 1px solid var(--ms-border);
     border-radius: 0.75rem;
     text-decoration: none;
     color: inherit;
@@ -113,12 +113,12 @@ const next = currentIndex >= 0 && currentIndex < flatList.length - 1 ? flatList[
 
   .prev-next-card:hover {
     transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--zen-dark) 16%, transparent);
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--zen-dark) 6%, transparent);
+    border-color: color-mix(in srgb, var(--ms-dark) 16%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--ms-dark) 6%, transparent);
   }
 
   .prev-next-card:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+    outline: 2px solid color-mix(in srgb, var(--ms-blue) 50%, transparent);
     outline-offset: 2px;
   }
 
@@ -133,20 +133,18 @@ const next = currentIndex >= 0 && currentIndex < flatList.length - 1 ? flatList[
     gap: 0.25rem;
     font-size: 0.75rem;
     font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 40%, transparent);
   }
 
   .section-label {
     font-size: 0.75rem;
-    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 40%, transparent);
   }
 
   .page-title {
     font-size: 0.9375rem;
     font-weight: 500;
-    color: var(--zen-dark);
+    color: var(--ms-dark);
   }
 
   @media (max-width: 639px) {

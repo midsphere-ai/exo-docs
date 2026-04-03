@@ -1,28 +1,29 @@
-# orbiter-memory
+# exo-memory
 
 Pluggable memory backends for short-term, long-term, and vector-based memory storage.
 
 ## Module Path
 
 ```
-orbiter.memory
+exo.memory
 ```
 
 ## Installation
 
 ```bash
-pip install "orbiter-memory @ git+https://github.com/Midsphere-AI/orbiter-ai.git#subdirectory=packages/orbiter-memory"
+pip install exo-memory
 ```
 
 ## Overview
 
-The `orbiter-memory` package provides a memory system for agents with:
+The `exo-memory` package provides a memory system for agents with:
 
 - **MemoryStore protocol** -- pluggable backend interface for add/get/search/clear
 - **Typed memory items** -- `SystemMemory`, `HumanMemory`, `AIMemory`, `ToolMemory` with status lifecycle
 - **ShortTermMemory** -- in-memory conversation store with scope filtering and windowing
 - **LongTermMemory** -- persistent knowledge with deduplication and LLM-powered extraction
 - **Summary system** -- configurable triggers and multi-template summarization
+- **Auto-persistence** -- `MemoryPersistence` attaches hooks to auto-save LLM and tool results
 - **Event integration** -- `MemoryEventEmitter` wraps any store with EventBus events
 - **Backend implementations** -- SQLite, Postgres, and Vector (embedding-based) stores
 
@@ -53,6 +54,7 @@ The `orbiter-memory` package provides a memory system for agents with:
 | `SummaryTemplate` | StrEnum | Built-in summary templates |
 | `check_trigger` | Function | Check if summary should be generated |
 | `generate_summary` | Function | Generate summaries from items |
+| `MemoryPersistence` | Class | Hook-based auto-persistence for agent memory |
 | `MemoryEventEmitter` | Class | EventBus-integrated store wrapper |
 | `MEMORY_ADDED` | `str` | Event constant: `"memory:added"` |
 | `MEMORY_SEARCHED` | `str` | Event constant: `"memory:searched"` |
@@ -62,29 +64,32 @@ The `orbiter-memory` package provides a memory system for agents with:
 
 ```python
 # Common imports
-from orbiter.memory import (
+from exo.memory import (
     MemoryStore, MemoryItem, MemoryMetadata, MemoryStatus,
     ShortTermMemory, LongTermMemory,
     HumanMemory, AIMemory, SystemMemory, ToolMemory,
 )
 
 # Summary system
-from orbiter.memory import (
+from exo.memory import (
     SummaryConfig, SummaryTemplate, SummaryResult,
     Summarizer, check_trigger, generate_summary,
 )
 
+# Auto-persistence
+from exo.memory import MemoryPersistence
+
 # Backends (import directly from submodules)
-from orbiter.memory.backends.sqlite import SQLiteMemoryStore
-from orbiter.memory.backends.postgres import PostgresMemoryStore
-from orbiter.memory.backends.vector import VectorMemoryStore, Embeddings, OpenAIEmbeddings
+from exo.memory.backends.sqlite import SQLiteMemoryStore
+from exo.memory.backends.postgres import PostgresMemoryStore
+from exo.memory.backends.vector import VectorMemoryStore, Embeddings, OpenAIEmbeddings
 ```
 
 ## Quick Example
 
 ```python
 import asyncio
-from orbiter.memory import (
+from exo.memory import (
     ShortTermMemory, HumanMemory, AIMemory, MemoryMetadata,
 )
 
@@ -109,5 +114,6 @@ asyncio.run(main())
 - [short-term](short-term.md) -- ShortTermMemory
 - [long-term](long-term.md) -- LongTermMemory and orchestrator
 - [summary](summary.md) -- Summary system
+- [persistence](persistence.md) -- MemoryPersistence (hook-based auto-save)
 - [events](events.md) -- MemoryEventEmitter
 - [backends](backends.md) -- SQLite, Postgres, Vector stores

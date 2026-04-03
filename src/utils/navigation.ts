@@ -19,10 +19,9 @@ export interface NavSection {
 const SECTION_ORDER: Record<string, number> = {
   'getting-started': 1,
   guides: 2,
-  distributed: 3,
-  architecture: 4,
-  reference: 5,
-  contributing: 6,
+  reference: 3,
+  advanced: 4,
+  migration: 5,
 };
 
 const DEFAULT_ORDER = 7;

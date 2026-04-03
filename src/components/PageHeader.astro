@@ -31,17 +31,17 @@ const { slug, title, description } = Astro.props;
 
   .accent-bar {
     width: 3rem;
-    height: 4px;
-    background: var(--color-coral);
+    height: 3px;
+    background: color-mix(in srgb, var(--ms-dark) 25%, transparent);
     border-radius: 2px;
     margin-bottom: 0.75rem;
   }
 
   .page-title {
     font-size: 2rem;
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: -0.02em;
-    color: var(--zen-dark);
+    color: var(--ms-dark);
     line-height: 1.2;
     margin: 0 0 0.5rem;
   }
@@ -49,14 +49,14 @@ const { slug, title, description } = Astro.props;
   .page-description {
     font-size: 1.0625rem;
     line-height: 1.6;
-    color: color-mix(in srgb, var(--zen-dark) 60%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 60%, transparent);
     margin: 0 0 1.25rem;
     max-width: 40rem;
   }
 
   .header-divider {
     height: 1px;
-    background: color-mix(in srgb, var(--zen-dark) 8%, transparent);
+    background: color-mix(in srgb, var(--ms-dark) 8%, transparent);
     margin-top: 1.25rem;
   }
 

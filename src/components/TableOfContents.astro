@@ -30,10 +30,8 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
   .toc-label {
     font-size: 0.6875rem;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: color-mix(in srgb, var(--zen-dark) 40%, transparent);
-    font-weight: 600;
+    color: color-mix(in srgb, var(--ms-dark) 40%, transparent);
+    font-weight: 500;
     margin-bottom: 0.75rem;
   }
 
@@ -54,7 +52,7 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
   .toc-link {
     display: block;
     font-size: 0.875rem;
-    color: color-mix(in srgb, var(--zen-dark) 50%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 50%, transparent);
     text-decoration: none;
     padding: 0.25rem 0.5rem;
     border-left: 2px solid transparent;
@@ -62,18 +60,18 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
   }
 
   .toc-link:hover {
-    color: var(--zen-dark);
+    color: var(--ms-dark);
   }
 
   .toc-link:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+    outline: 2px solid color-mix(in srgb, var(--ms-blue) 50%, transparent);
     outline-offset: 2px;
   }
 
   .toc-link.is-active {
-    color: var(--color-coral);
+    color: var(--ms-dark);
     font-weight: 500;
-    border-left-color: var(--color-coral);
+    border-left-color: var(--ms-dark);
   }
 </style>
 

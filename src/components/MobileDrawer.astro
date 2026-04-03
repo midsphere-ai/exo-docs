@@ -69,7 +69,7 @@ const { currentSlug } = Astro.props;
     position: fixed;
     inset: 0;
     z-index: 40;
-    background: color-mix(in srgb, var(--zen-dark) 30%, transparent);
+    background: color-mix(in srgb, var(--ms-dark) 30%, transparent);
     backdrop-filter: blur(4px);
     opacity: 0;
     pointer-events: none;
@@ -86,8 +86,8 @@ const { currentSlug } = Astro.props;
     width: 280px;
     max-width: 85vw;
     height: 100vh;
-    background: var(--zen-paper);
-    border-right: 1px solid color-mix(in srgb, var(--zen-dark) 8%, transparent);
+    background: var(--ms-paper);
+    border-right: 1px solid color-mix(in srgb, var(--ms-dark) 8%, transparent);
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     overflow-y: auto;
@@ -98,15 +98,13 @@ const { currentSlug } = Astro.props;
     align-items: center;
     justify-content: space-between;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--zen-border);
+    border-bottom: 1px solid var(--ms-border);
   }
 
   .drawer-title {
     font-size: 0.8125rem;
-    font-weight: 600;
-    color: color-mix(in srgb, var(--zen-dark) 50%, transparent);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--ms-dark) 50%, transparent);
   }
 
   .drawer-close {
@@ -116,18 +114,18 @@ const { currentSlug } = Astro.props;
     width: 2rem;
     height: 2rem;
     border-radius: 0.375rem;
-    color: color-mix(in srgb, var(--zen-dark) 50%, transparent);
+    color: color-mix(in srgb, var(--ms-dark) 50%, transparent);
     cursor: pointer;
     transition: color 0.15s, background-color 0.15s;
   }
 
   .drawer-close:hover {
-    color: var(--zen-dark);
-    background: color-mix(in srgb, var(--zen-dark) 6%, transparent);
+    color: var(--ms-dark);
+    background: color-mix(in srgb, var(--ms-dark) 6%, transparent);
   }
 
   .drawer-close:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+    outline: 2px solid color-mix(in srgb, var(--ms-blue) 50%, transparent);
     outline-offset: 2px;
   }
 

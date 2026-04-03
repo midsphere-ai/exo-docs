@@ -1,11 +1,11 @@
-# orbiter.config
+# exo.config
 
-Configuration types for models, agents, tasks, and runs in the Orbiter framework.
+Configuration types for models, agents, tasks, and runs in the Exo framework.
 
-**Module:** `orbiter.config`
+**Module:** `exo.config`
 
 ```python
-from orbiter.config import (
+from exo.config import (
     parse_model_string,
     ModelConfig,
     AgentConfig,
@@ -39,7 +39,7 @@ A `(provider, model_name)` tuple of strings.
 ### Example
 
 ```python
-from orbiter.config import parse_model_string
+from exo.config import parse_model_string
 
 provider, model_name = parse_model_string("openai:gpt-4o")
 # provider = "openai", model_name = "gpt-4o"
@@ -75,7 +75,7 @@ Configuration for an LLM provider connection. Immutable (frozen Pydantic model).
 ### Example
 
 ```python
-from orbiter.config import ModelConfig
+from exo.config import ModelConfig
 
 config = ModelConfig(
     provider="openai",
@@ -105,11 +105,20 @@ Configuration for an Agent. Immutable (frozen Pydantic model).
 | `temperature` | `float` | `1.0` | LLM sampling temperature. Must be between 0.0 and 2.0. |
 | `max_tokens` | `int \| None` | `None` | Maximum output tokens per LLM call. |
 | `max_steps` | `int` | `10` | Maximum LLM-tool round-trips. Must be >= 1. |
+| `planning_enabled` | `bool` | `False` | Enables an ephemeral planner pass before execution. |
+| `planning_model` | `str \| None` | `None` | Optional planner model override. Falls back to the executor model when unset. |
+| `planning_instructions` | `str` | `""` | Optional planner-only instructions. Falls back to the executor instructions when unset. |
+| `budget_awareness` | `str \| None` | `None` | Either `per-message` or `limit:<0-100>`. |
+| `hitl_tools` | `list[str]` | `[]` | Tool names that require approval before execution. |
+| `emit_mcp_progress` | `bool` | `True` | Controls MCP progress-event emission. |
+| `injected_tool_args` | `dict[str, str]` | `{}` | Schema-only tool arguments exposed to the model. |
+| `allow_parallel_subagents` | `bool` | `False` | Enables the parallel sub-agent contract. |
+| `max_parallel_subagents` | `int` | `3` | Maximum child jobs per parallel call. Must be `1..7`. |
 
 ### Example
 
 ```python
-from orbiter.config import AgentConfig
+from exo.config import AgentConfig
 
 config = AgentConfig(
     name="researcher",
@@ -117,6 +126,11 @@ config = AgentConfig(
     instructions="You are a research assistant.",
     temperature=0.7,
     max_steps=20,
+    planning_enabled=True,
+    planning_model="openai:gpt-4o-mini",
+    budget_awareness="limit:70",
+    hitl_tools=["search_documents"],
+    injected_tool_args={"ui_request_id": "Opaque UI correlation id"},
 )
 ```
 
@@ -140,7 +154,7 @@ Configuration for a task. Immutable (frozen Pydantic model).
 ### Example
 
 ```python
-from orbiter.config import TaskConfig
+from exo.config import TaskConfig
 
 config = TaskConfig(
     name="summarize",
@@ -170,7 +184,7 @@ Configuration for a single run invocation. Immutable (frozen Pydantic model).
 ### Example
 
 ```python
-from orbiter.config import RunConfig
+from exo.config import RunConfig
 
 config = RunConfig(
     max_steps=20,

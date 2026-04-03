@@ -1,14 +1,14 @@
 <div align="center">
 
-# Orbiter Docs
+# Exo Docs
 
-### The documentation site for [Orbiter](https://github.com/Midsphere-AI/orbiter-ai) -- a modern, modular multi-agent framework for Python.
+### The documentation site for [Exo](https://github.com/Midsphere-AI/exo-ai) -- a modern, modular multi-agent framework for Python.
 
 [![Built with Astro](https://astro.badg.es/v2/built-with-astro/small.svg)](https://astro.build)
 
-[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Midsphere-AI/orbiter-docs/tree/main)
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Midsphere-AI/exo-docs/tree/main)
 
-[Live Site](https://orbiter.dev) &nbsp;&middot;&nbsp; [Orbiter Framework](https://github.com/Midsphere-AI/orbiter-ai) &nbsp;&middot;&nbsp; [Contributing](#syncing-docs)
+[Live Site](https://exo.midsphere.ai) &nbsp;&middot;&nbsp; [Exo Framework](https://github.com/Midsphere-AI/exo-ai) &nbsp;&middot;&nbsp; [Contributing](#syncing-docs)
 
 </div>
 
@@ -41,16 +41,16 @@ npm run build     # static site + search index
 
 ## How It Works
 
-The site reads markdown files directly from `docs-source/` using Astro's Content Collections `glob()` loader. Documentation is synced from the [orbiter-ai](https://github.com/Midsphere-AI/orbiter-ai) repo's `docs/` directory -- no file copying or build-time transforms needed.
+The site reads markdown files directly from `docs-source/` using Astro's Content Collections `glob()` loader. Documentation is synced from the [exo-ai](https://github.com/Midsphere-AI/exo-ai) repo's `docs/` directory -- no file copying or build-time transforms needed.
 
 ```
-docs-source/              Markdown source (synced from orbiter-ai/docs/)
+docs-source/              Markdown source (synced from exo-ai/docs/)
   ├── getting-started/    Installation, quickstart, core concepts
   ├── guides/             Agents, tools, multi-agent, context, memory, MCP, sandbox...
-  ├── distributed/        Distributed execution architecture with Redis
-  ├── architecture/       Design decisions, execution flow, error handling
   ├── reference/          Full API reference for all 13 packages
-  └── contributing/       Development setup, code style, testing, API conventions
+  ├── advanced/           Architecture, design docs, porting guides, contributing
+  ├── migration/          Migration guides from AWorld
+  └── index.md            Landing page
 
 src/
   ├── components/         Sidebar, Navbar, SearchModal, TOC, illustrations
@@ -85,18 +85,18 @@ src/
 
 ## Syncing Docs
 
-To pull the latest documentation from the main Orbiter repository:
+To pull the latest documentation from the main Exo repository:
 
 ```sh
-# Copy all docs from orbiter-ai
-cp -r /path/to/orbiter-ai/docs/* docs-source/
+# Copy all docs from exo-ai
+cp -r /path/to/exo-ai/docs/* docs-source/
 
 # Verify everything builds
 npm run build
 ```
 
 > [!NOTE]
-> New top-level sections (like `distributed/`) need an entry in `SECTION_ORDER` in [`src/utils/navigation.ts`](src/utils/navigation.ts) and icon mappings in [`src/components/Sidebar.astro`](src/components/Sidebar.astro).
+> New top-level sections need an entry in `SECTION_ORDER` in [`src/utils/navigation.ts`](src/utils/navigation.ts) and icon mappings in [`src/components/Sidebar.astro`](src/components/Sidebar.astro).
 
 ## Tech Stack
 
@@ -108,5 +108,5 @@ npm run build
 ---
 
 <div align="center">
-<sub>Built with Astro. Docs synced from <a href="https://github.com/Midsphere-AI/orbiter-ai">orbiter-ai</a>.</sub>
+<sub>Built with Astro. Docs synced from <a href="https://github.com/Midsphere-AI/exo-ai">exo-ai</a>.</sub>
 </div>

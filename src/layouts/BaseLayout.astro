@@ -43,12 +43,18 @@ const { title, description, pageType = 'docs', breadcrumbs = [] } = Astro.props;
         .code-copy-btn { display: none !important; }
         @media (prefers-color-scheme: dark) {
           :root {
-            --zen-paper: #1f1f1f !important;
-            --zen-dark: #d1cfc0 !important;
-            --zen-muted: #6b6960 !important;
-            --zen-subtle: #2a2a28 !important;
-            --zen-border: #2e2e2e !important;
-            --zen-card: #161616 !important;
+            --ms-paper: #111111 !important;
+            --ms-dark: #e8e8e6 !important;
+            --ms-surface: #1a1a1a !important;
+            --ms-elevated: #222222 !important;
+            --ms-accent: #e8e8e6 !important;
+            --ms-blue: #4da6ff !important;
+            --ms-muted: rgba(255,255,255,0.40) !important;
+            --ms-subtle: rgba(255,255,255,0.05) !important;
+            --ms-border: rgba(255,255,255,0.08) !important;
+            --ms-border-subtle: rgba(255,255,255,0.05) !important;
+            --ms-border-strong: rgba(255,255,255,0.15) !important;
+            --ms-danger: #fc8181 !important;
           }
           .code-block pre span { color: var(--shiki-dark) !important; }
         }
@@ -56,7 +62,7 @@ const { title, description, pageType = 'docs', breadcrumbs = [] } = Astro.props;
     </noscript>
   </head>
   <body>
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-paper focus:text-dark focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-coral/50 focus:ring-offset-2 focus:ring-offset-paper">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-paper focus:text-dark focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-zen-blue/50 focus:ring-offset-2 focus:ring-offset-paper">
       Skip to content
     </a>
 
@@ -119,8 +125,8 @@ const { title, description, pageType = 'docs', breadcrumbs = [] } = Astro.props;
     text-align: center;
     padding: 2rem 1rem;
     font-size: 0.875rem;
-    color: var(--zen-muted);
-    border-top: 1px solid var(--zen-border);
+    color: var(--ms-muted);
+    border-top: 1px solid var(--ms-border);
   }
 
   .site-footer p {

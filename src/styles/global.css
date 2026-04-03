@@ -1,46 +1,63 @@
 @import "tailwindcss";
-@import "@fontsource-variable/bricolage-grotesque";
 @import "@fontsource-variable/jetbrains-mono";
-@import url('https://fonts.cdnfonts.com/css/junicode');
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap");
 
-/* ── Design system color tokens (matching Zen Browser docs) ── */
+/* ── Midsphere Design System tokens ── */
 :root {
-  --zen-paper: #f2f0e3;
-  --zen-dark: #2e2e2e;
-  --zen-muted: #a8a599;
-  --zen-subtle: #e8e6d9;
-  --zen-border: #eae9e2;
-  --zen-card: #f7f6ee;
+  --ms-paper: #f8f8f7;
+  --ms-dark: #1a1a1a;
+  --ms-surface: #f2f2f1;
+  --ms-elevated: #eaeae9;
+  --ms-accent: #1a1a1a;
+  --ms-blue: #0081f2;
+  --ms-panel-dark: #111111;
+  --ms-muted: rgba(0,0,0,0.45);
+  --ms-subtle: rgba(0,0,0,0.04);
+  --ms-border: rgba(0,0,0,0.08);
+  --ms-border-subtle: rgba(0,0,0,0.04);
+  --ms-border-strong: rgba(0,0,0,0.15);
+  --ms-danger: #e53e3e;
 }
 
 [data-theme="dark"] {
-  --zen-paper: #1f1f1f;
-  --zen-dark: #d1cfc0;
-  --zen-muted: #6b6960;
-  --zen-subtle: #2a2a28;
-  --zen-border: #2e2e2e;
-  --zen-card: #161616;
+  --ms-paper: #111111;
+  --ms-dark: #e8e8e6;
+  --ms-surface: #1a1a1a;
+  --ms-elevated: #222222;
+  --ms-accent: #e8e8e6;
+  --ms-blue: #4da6ff;
+  --ms-panel-dark: #0a0a0a;
+  --ms-muted: rgba(255,255,255,0.40);
+  --ms-subtle: rgba(255,255,255,0.05);
+  --ms-border: rgba(255,255,255,0.08);
+  --ms-border-subtle: rgba(255,255,255,0.05);
+  --ms-border-strong: rgba(255,255,255,0.15);
+  --ms-danger: #fc8181;
 }
 
 /* ── Map tokens to Tailwind v4 theme ── */
 @theme {
-  --color-paper: var(--zen-paper);
-  --color-dark: var(--zen-dark);
-  --color-coral: #F76F53;
-  --color-zen-blue: #6287f5;
-  --color-zen-green: #63f78b;
-  --color-muted: var(--zen-muted);
-  --color-subtle: var(--zen-subtle);
-  --color-border: var(--zen-border);
-  --color-card: var(--zen-card);
+  --color-paper: var(--ms-paper);
+  --color-dark: var(--ms-dark);
+  --color-coral: var(--ms-accent);
+  --color-zen-blue: var(--ms-blue);
+  --color-zen-green: var(--ms-blue);
+  --color-muted: var(--ms-muted);
+  --color-subtle: var(--ms-surface);
+  --color-border: var(--ms-border);
+  --color-card: var(--ms-elevated);
+  --color-surface: var(--ms-surface);
+  --color-elevated: var(--ms-elevated);
+  --color-danger: var(--ms-danger);
+  --color-ms-blue: var(--ms-blue);
 }
 
 /* ── Body defaults ── */
 body {
-  font-family: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-weight: 400;
-  background-color: var(--zen-paper);
-  color: var(--zen-dark);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 500;
+  background-color: var(--ms-paper);
+  color: var(--ms-dark);
 }
 
 code, pre, kbd, samp {
@@ -50,7 +67,7 @@ code, pre, kbd, samp {
 /* ── Animation keyframes ── */
 @keyframes zenReveal {
   from {
-    filter: blur(8px);
+    filter: blur(4px);
     transform: translateY(24px);
     opacity: 0;
   }
@@ -63,7 +80,7 @@ code, pre, kbd, samp {
 
 @keyframes zenFade {
   from {
-    filter: blur(6px);
+    filter: blur(4px);
     opacity: 0;
   }
   to {
@@ -74,7 +91,7 @@ code, pre, kbd, samp {
 
 @keyframes zenScale {
   from {
-    filter: blur(6px);
+    filter: blur(4px);
     transform: scale(0.95);
     opacity: 0;
   }
@@ -91,9 +108,9 @@ code, pre, kbd, samp {
 }
 
 [data-animate].is-visible {
-  animation-duration: 0.6s;
+  animation-duration: 0.5s;
   animation-fill-mode: both;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 [data-animate="reveal"].is-visible {
@@ -140,13 +157,13 @@ code, pre, kbd, samp {
 }
 
 .prose p {
-  color: color-mix(in srgb, var(--zen-dark) 80%, transparent);
+  color: color-mix(in srgb, var(--ms-dark) 80%, transparent);
   line-height: 1.75;
   margin-block: 1.25em;
 }
 
 .prose a {
-  color: var(--color-coral);
+  color: var(--ms-blue);
   text-decoration: underline;
   text-underline-offset: 2px;
   text-decoration-thickness: 1px;
@@ -158,27 +175,27 @@ code, pre, kbd, samp {
 }
 
 .prose a:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--ms-blue) 50%, transparent);
   outline-offset: 2px;
 }
 
 .prose strong {
-  font-weight: 700;
-  color: var(--zen-dark);
+  font-weight: 500;
+  color: var(--ms-dark);
 }
 
 .prose code:not(pre code) {
-  background-color: color-mix(in srgb, var(--zen-dark) 6%, transparent);
+  background-color: color-mix(in srgb, var(--ms-dark) 6%, transparent);
   border-radius: 0.375rem;
   padding: 0.15em 0.35em;
   font-size: 0.875em;
 }
 
 .prose blockquote {
-  border-left: 2px solid color-mix(in srgb, var(--color-coral) 40%, transparent);
+  border-left: 2px solid color-mix(in srgb, var(--ms-dark) 15%, transparent);
   padding-left: 1em;
   margin-left: 0;
-  color: color-mix(in srgb, var(--zen-dark) 70%, transparent);
+  color: color-mix(in srgb, var(--ms-dark) 70%, transparent);
   font-style: italic;
 }
 
@@ -196,35 +213,35 @@ code, pre, kbd, samp {
 
 .prose li {
   margin-block: 0.375em;
-  color: color-mix(in srgb, var(--zen-dark) 80%, transparent);
+  color: color-mix(in srgb, var(--ms-dark) 80%, transparent);
 }
 
 .prose li::marker {
-  color: color-mix(in srgb, var(--zen-dark) 30%, transparent);
+  color: color-mix(in srgb, var(--ms-dark) 30%, transparent);
 }
 
 .prose h2 {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 400;
   margin-top: 2.5em;
   margin-bottom: 0.75em;
-  color: var(--zen-dark);
+  color: var(--ms-dark);
 }
 
 .prose h3 {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 400;
   margin-top: 2em;
   margin-bottom: 0.5em;
-  color: var(--zen-dark);
+  color: var(--ms-dark);
 }
 
 .prose h4 {
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 400;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
-  color: var(--zen-dark);
+  color: var(--ms-dark);
 }
 
 .prose table {
@@ -235,22 +252,22 @@ code, pre, kbd, samp {
 }
 
 .prose thead th {
-  border-bottom: 2px solid var(--zen-border);
+  border-bottom: 2px solid var(--ms-border);
   padding: 0.75em 1em;
   text-align: left;
-  font-weight: 600;
-  color: var(--zen-dark);
+  font-weight: 500;
+  color: var(--ms-dark);
 }
 
 .prose tbody td {
-  border-bottom: 1px solid var(--zen-border);
+  border-bottom: 1px solid var(--ms-border);
   padding: 0.75em 1em;
-  color: color-mix(in srgb, var(--zen-dark) 80%, transparent);
+  color: color-mix(in srgb, var(--ms-dark) 80%, transparent);
 }
 
 .prose hr {
   border: none;
-  border-top: 1px solid color-mix(in srgb, var(--zen-dark) 10%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--ms-dark) 10%, transparent);
   margin-block: 2em;
 }
 
@@ -276,7 +293,7 @@ code, pre, kbd, samp {
 
 [data-callout-type] .callout-label {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 [data-callout-type] .callout-content {
@@ -291,51 +308,51 @@ code, pre, kbd, samp {
   margin-bottom: 0;
 }
 
-/* Tip: zen-green accent */
+/* Tip: blue accent */
 [data-callout-type="tip"] {
-  border-left-color: var(--color-zen-green);
-  background-color: color-mix(in srgb, var(--color-zen-green) 6%, transparent);
+  border-left-color: var(--ms-blue);
+  background-color: color-mix(in srgb, var(--ms-blue) 5%, transparent);
 }
 
 [data-callout-type="tip"] .callout-header {
-  color: var(--color-zen-green);
+  color: var(--ms-blue);
 }
 
-/* Info: zen-blue accent */
+/* Info: blue accent */
 [data-callout-type="info"] {
-  border-left-color: var(--color-zen-blue);
-  background-color: color-mix(in srgb, var(--color-zen-blue) 6%, transparent);
+  border-left-color: var(--ms-blue);
+  background-color: color-mix(in srgb, var(--ms-blue) 5%, transparent);
 }
 
 [data-callout-type="info"] .callout-header {
-  color: var(--color-zen-blue);
+  color: var(--ms-blue);
 }
 
-/* Warning: coral accent */
+/* Warning: amber accent */
 [data-callout-type="warning"] {
-  border-left-color: var(--color-coral);
-  background-color: color-mix(in srgb, var(--color-coral) 6%, transparent);
+  border-left-color: #b45309;
+  background-color: color-mix(in srgb, #b45309 5%, transparent);
 }
 
 [data-callout-type="warning"] .callout-header {
-  color: var(--color-coral);
+  color: #b45309;
 }
 
 /* Danger: red accent */
 [data-callout-type="danger"] {
-  border-left-color: #ef4444;
-  background-color: color-mix(in srgb, #ef4444 6%, transparent);
+  border-left-color: var(--ms-danger);
+  background-color: color-mix(in srgb, var(--ms-danger) 5%, transparent);
 }
 
 [data-callout-type="danger"] .callout-header {
-  color: #ef4444;
+  color: var(--ms-danger);
 }
 
 /* ── Code blocks with window chrome ── */
 .code-block {
   border-radius: 0.75rem;
   overflow: hidden;
-  border: 1px solid var(--zen-border);
+  border: 1px solid var(--ms-border);
   margin-block: 1.5em;
 }
 
@@ -344,12 +361,12 @@ code, pre, kbd, samp {
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 1rem;
-  background-color: color-mix(in srgb, var(--zen-dark) 4%, transparent);
-  border-bottom: 1px solid var(--zen-border);
+  background-color: color-mix(in srgb, var(--ms-dark) 4%, transparent);
+  border-bottom: 1px solid var(--ms-border);
 }
 
 [data-theme="dark"] .code-header {
-  background-color: #1a1a1a;
+  background-color: var(--ms-surface);
 }
 
 .code-header-dots {
@@ -361,24 +378,13 @@ code, pre, kbd, samp {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-}
-
-.code-header-dots .dot-coral {
-  background-color: color-mix(in srgb, var(--color-coral) 40%, transparent);
-}
-
-.code-header-dots .dot-blue {
-  background-color: color-mix(in srgb, var(--color-zen-blue) 40%, transparent);
-}
-
-.code-header-dots .dot-green {
-  background-color: color-mix(in srgb, var(--color-zen-green) 40%, transparent);
+  background-color: color-mix(in srgb, var(--ms-dark) 15%, transparent);
 }
 
 .code-header-lang {
   font-size: 0.75rem;
   font-weight: 500;
-  color: color-mix(in srgb, var(--zen-dark) 50%, transparent);
+  color: color-mix(in srgb, var(--ms-dark) 50%, transparent);
   text-transform: lowercase;
   margin-left: auto;
 }
@@ -387,7 +393,7 @@ code, pre, kbd, samp {
   margin: 0 !important;
   border-radius: 0 !important;
   border: none !important;
-  background-color: color-mix(in srgb, var(--zen-dark) 4%, transparent) !important;
+  background-color: color-mix(in srgb, var(--ms-dark) 4%, transparent) !important;
   padding: 1rem 1.25rem !important;
   overflow-x: auto;
   font-size: 0.875rem;
@@ -395,7 +401,7 @@ code, pre, kbd, samp {
 }
 
 [data-theme="dark"] .code-block pre {
-  background-color: #161616 !important;
+  background-color: var(--ms-panel-dark) !important;
 }
 
 .code-block pre code {
@@ -428,10 +434,10 @@ code, pre, kbd, samp {
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  border: 1px solid var(--zen-border);
+  border: 1px solid var(--ms-border);
   border-radius: 0.5rem;
-  background-color: color-mix(in srgb, var(--zen-paper) 80%, transparent);
-  color: color-mix(in srgb, var(--zen-dark) 50%, transparent);
+  background-color: color-mix(in srgb, var(--ms-paper) 80%, transparent);
+  color: color-mix(in srgb, var(--ms-dark) 50%, transparent);
   cursor: pointer;
   opacity: 0;
   transition: opacity 200ms, color 200ms, background-color 200ms;
@@ -445,12 +451,12 @@ code, pre, kbd, samp {
 }
 
 .code-copy-btn:hover {
-  color: var(--zen-dark);
-  background-color: color-mix(in srgb, var(--zen-paper) 95%, transparent);
+  color: var(--ms-dark);
+  background-color: color-mix(in srgb, var(--ms-paper) 95%, transparent);
 }
 
 .code-copy-btn:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--ms-blue) 50%, transparent);
   outline-offset: 2px;
 }
 
@@ -464,11 +470,16 @@ code, pre, kbd, samp {
 
 .code-copy-btn.is-copied .code-check-icon {
   display: block;
-  color: var(--color-zen-green);
+  color: var(--ms-blue);
 }
 
 /* Focus outline for keyboard navigation */
 .code-block pre:focus {
-  outline: 2px solid color-mix(in srgb, var(--color-coral) 50%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--ms-blue) 50%, transparent);
   outline-offset: -2px;
 }
+
+/* ── Dark mode shadow overrides ── */
+[data-theme="dark"] .shadow-sm { --tw-shadow-color: rgba(0, 0, 0, 0.3); }
+[data-theme="dark"] .shadow-lg { --tw-shadow-color: rgba(0, 0, 0, 0.4); }
+[data-theme="dark"] .shadow-xl { --tw-shadow-color: rgba(0, 0, 0, 0.5); }
