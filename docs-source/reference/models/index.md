@@ -10,8 +10,11 @@ exo.models
 
 ## Installation
 
+Part of the exo-ai monorepo:
+
 ```bash
-pip install exo-models
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
 ## Overview

@@ -23,7 +23,7 @@ from exo_server import (
 )
 ```
 
-**Install:** `pip install exo-server`
+**Install:** Included in the exo-ai monorepo. Clone and run `uv sync` to install all packages.
 
 ---
 

@@ -4,21 +4,19 @@ Retrieval framework for Exo agents: embeddings, vector stores, chunkers, parsers
 
 ## Installation
 
+Part of the exo-ai monorepo:
+
 ```bash
-pip install exo-retrieval
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
-Optional backends:
+Optional backends can be enabled with extras from the `packages/exo-retrieval` directory:
 
 ```bash
-# ChromaDB vector store
-pip install "exo-retrieval[chroma] @ git+..."
-
-# PostgreSQL/pgvector vector store
-pip install "exo-retrieval[pgvector] @ git+..."
-
-# PDF parsing
-pip install "exo-retrieval[pdf] @ git+..."
+uv sync --extra chroma      # ChromaDB vector store
+uv sync --extra pgvector    # PostgreSQL/pgvector vector store
+uv sync --extra pdf         # PDF parsing
 ```
 
 ## Module path

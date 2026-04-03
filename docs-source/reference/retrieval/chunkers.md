@@ -202,7 +202,7 @@ for c in chunks:
 Install `tiktoken` for accurate token counting:
 
 ```bash
-pip install tiktoken
+uv pip install tiktoken
 ```
 
 Without `tiktoken`, the chunker falls back to whitespace splitting (each whitespace-separated word counts as one token).

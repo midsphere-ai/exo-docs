@@ -4,50 +4,24 @@
 
 - **Python 3.11+** -- Exo uses modern Python features (`types.UnionType`, `asyncio.TaskGroup`, `ExceptionGroup`) that require Python 3.11 or later.
 - **An LLM API key** -- At minimum, you need an API key from OpenAI or Anthropic.
+- **UV** -- Exo uses [UV](https://docs.astral.sh/uv/) for package management.
 
-## Install with pip
+## Install from Git
 
-### Meta-package (recommended)
-
-The `exo` meta-package installs exo-core plus all standard extras:
-
-```bash
-pip install exo
-```
-
-### Minimal install
-
-If you only need the core agent framework (Agent, Tool, Runner, Swarm) without LLM provider packages:
+Exo is not yet published on PyPI. Install directly from the Git repository:
 
 ```bash
-pip install exo-core
-```
+# Install UV if you don't have it
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-### With LLM providers
+# Clone the repository
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
 
-To use OpenAI and Anthropic models, add the models package:
+# Sync all workspace packages (installs all packages in editable mode)
+uv sync
 
-```bash
-pip install exo-core exo-models
-```
-
-### Individual packages
-
-Install only what you need:
-
-```bash
-pip install exo-core       # Agent, Tool, Runner, Swarm, Config, Events, Hooks
-pip install exo-models     # OpenAI + Anthropic providers
-pip install exo-context    # Context engine, neurons, prompt builder
-pip install exo-memory     # Short/long-term memory, vector search
-pip install exo-mcp        # Model Context Protocol client/server
-pip install exo-trace      # OpenTelemetry tracing
-pip install exo-eval       # Evaluators, scorers, reflection
-pip install exo-sandbox    # Sandboxed execution environments
-pip install exo-a2a        # Agent-to-Agent protocol
-pip install exo-cli        # CLI entry point
-pip install exo-server     # FastAPI server + WebSocket streaming
-pip install exo-train      # Trajectory dataset + trainers
+# Verify the installation
+uv run python -c "from exo import Agent, run, tool; print('OK')"
 ```
 
 ## Environment Variables
@@ -72,25 +46,7 @@ provider = get_provider("openai:gpt-4o", api_key="sk-...")
 
 Or set them in a `.env` file and load with your preferred method (e.g., `python-dotenv`).
 
-## Development Setup (UV Workspace)
-
-If you want to contribute to Exo or work with the full monorepo:
-
-```bash
-# Clone the repository
-git clone https://github.com/inclusionAI/AWorld && cd AWorld
-
-# Install UV if you don't have it
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Sync all workspace packages (installs all 13 packages in editable mode)
-uv sync
-
-# Verify the installation
-uv run python -c "from exo import Agent, run, tool; print('OK')"
-```
-
-### Running Tests
+## Running Tests
 
 ```bash
 # Run all tests
@@ -104,7 +60,7 @@ uv run pytest packages/exo-models/tests/
 uv run pytest -v
 ```
 
-### Linting and Type Checking
+## Linting and Type Checking
 
 ```bash
 # Lint with ruff

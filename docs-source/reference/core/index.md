@@ -4,8 +4,11 @@ The `exo-core` package is the foundation of the Exo framework. It provides all t
 
 ## Installation
 
+Part of the exo-ai monorepo:
+
 ```bash
-pip install exo-core
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
 ## Import Patterns

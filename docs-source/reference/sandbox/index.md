@@ -4,11 +4,17 @@ Isolated execution environments for safe agent operation.
 
 ## Installation
 
-```bash
-pip install exo-sandbox
+Part of the exo-ai monorepo:
 
-# For Kubernetes support:
-pip install exo-sandbox[kubernetes]
+```bash
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
+```
+
+For Kubernetes support, install the extra from the `packages/exo-sandbox` directory:
+
+```bash
+uv sync --extra kubernetes
 ```
 
 ## Module path

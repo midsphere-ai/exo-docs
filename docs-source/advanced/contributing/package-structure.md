@@ -172,7 +172,7 @@ exo-core = { workspace = true }
 | Thing | Convention | Example |
 |-------|-----------|---------|
 | Package directory | `exo-<name>` | `exo-core`, `exo-models` |
-| PyPI package name | `exo-<name>` | `pip install exo-models` |
+| Package name | `exo-<name>` | `exo-models` |
 | Import path | `exo.<name>` | `from exo.models import ...` |
 | Module files | `snake_case.py` | `message_builder.py`, `output_parser.py` |
 | Internal modules | `_internal/<name>.py` | `_internal/call_runner.py` |

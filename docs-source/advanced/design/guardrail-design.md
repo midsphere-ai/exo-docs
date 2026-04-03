@@ -80,7 +80,7 @@ A new `exo-guardrail` package that:
 2. Integrates with agents via `HookManager` — guardrails register as hooks
    at specific `HookPoint` values.
 3. Can coexist with rails — both register as hooks on the same `HookManager`.
-4. Is independently installable (`pip install exo-guardrail`).
+4. Is independently available as a package within the exo-ai monorepo.
 
 **Why Option C:**
 
@@ -513,8 +513,8 @@ packages/exo-guardrail/
 4. **All existing tests pass.** Since no existing code is modified,
    all ~2,900 tests remain unaffected.
 
-5. **Optional dependency.** `exo-guardrail` is a separate pip-installable
-   package. Projects that don't need guardrails don't need to install it.
+5. **Optional dependency.** `exo-guardrail` is a separate package within
+   the monorepo. Projects that don't need guardrails don't need to import it.
 
 ---
 

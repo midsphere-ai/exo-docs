@@ -47,16 +47,16 @@ The migration is broken into these areas:
 
 ## Package Installation
 
-AWorld was a monolith. Exo is modular -- install only what you need:
+AWorld was a monolith. Exo is a modular monorepo -- all packages are installed together:
 
 ```bash
-# Minimal -- core + models
-pip install exo-core exo-models
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
+```
 
-# Or the meta-package for everything
-pip install exo
+Optional extras can be enabled per-package. For example, from the relevant package directory:
 
-# With specific extras
-pip install exo-memory[qdrant]
-pip install exo-sandbox[kubernetes]
+```bash
+uv sync --extra qdrant       # Vector memory backend (packages/exo-memory)
+uv sync --extra kubernetes   # Kubernetes sandbox (packages/exo-sandbox)
 ```

@@ -43,7 +43,7 @@ from exo_cli import (
 )
 ```
 
-**Install:** `pip install exo-cli`
+**Install:** Included in the exo-ai monorepo. Clone and run `uv sync` to install all packages.
 
 ---
 

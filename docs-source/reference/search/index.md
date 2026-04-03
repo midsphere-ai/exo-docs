@@ -4,21 +4,19 @@ AI-powered search engine with deep research, citation verification, contradictio
 
 ## Installation
 
+Part of the exo-ai monorepo:
+
 ```bash
-pip install exo-search
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
-Optional extras:
+Optional extras can be enabled from the `packages/exo-search` directory:
 
 ```bash
-# FastAPI server
-pip install "exo-search[server] @ git+..."
-
-# Embedding-based reranking (Gemini, Vertex AI, OpenAI)
-pip install "exo-search[embeddings] @ git+..."
-
-# PDF content extraction
-pip install "exo-search[pdf] @ git+..."
+uv sync --extra server       # FastAPI server
+uv sync --extra embeddings   # Embedding-based reranking (Gemini, Vertex AI, OpenAI)
+uv sync --extra pdf          # PDF content extraction
 ```
 
 ## Module Path

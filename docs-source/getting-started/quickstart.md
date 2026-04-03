@@ -4,7 +4,7 @@ Build and run your first Exo agent in under 5 minutes.
 
 ## Prerequisites
 
-- Exo installed (`pip install exo` or `pip install exo-core exo-models`)
+- Exo installed (see [Installation](installation.md))
 - `OPENAI_API_KEY` environment variable set
 
 ## Hello, Weather Agent

@@ -657,10 +657,11 @@ Flattens JSON into readable text with dot-separated key paths and bracket notati
 
 ### PDFParser
 
-Extracts text from PDF files page by page. Requires the optional `pymupdf` package:
+Extracts text from PDF files page by page. Requires the optional `pymupdf` package, included via the `pdf` extra:
 
 ```bash
-pip install pymupdf
+# From the exo-ai monorepo root or packages/exo-retrieval directory
+uv sync --extra pdf
 ```
 
 ### Example

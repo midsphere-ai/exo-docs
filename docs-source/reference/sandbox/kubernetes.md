@@ -6,7 +6,7 @@ Kubernetes-based sandbox for remote agent execution.
 from exo.sandbox.kubernetes import KubernetesSandbox
 ```
 
-**Requires:** `pip install exo-sandbox[kubernetes]`
+**Requires:** Included in the exo-ai monorepo. Install the Kubernetes extra with `uv sync --extra kubernetes` from the `packages/exo-sandbox` directory.
 
 ---
 

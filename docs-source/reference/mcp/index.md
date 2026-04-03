@@ -4,8 +4,11 @@ Model Context Protocol client, server, and tool integration for Exo.
 
 ## Installation
 
+Part of the exo-ai monorepo:
+
 ```bash
-pip install exo-mcp
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
 ## Module path

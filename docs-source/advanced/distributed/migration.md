@@ -120,8 +120,11 @@ Swarms work the same way — `distributed()` accepts both `Agent` and `Swarm` in
 
 ### 1. Install exo-distributed
 
+exo-distributed is part of the exo-ai monorepo:
+
 ```bash
-pip install exo-distributed
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
 ### 2. Start Redis

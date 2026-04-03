@@ -4,8 +4,11 @@ Agent-to-Agent protocol for cross-service agent communication.
 
 ## Installation
 
+Part of the exo-ai monorepo:
+
 ```bash
-pip install exo-a2a
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
 ## Module path

@@ -4,8 +4,11 @@ Skill source watchers for Exo hot-reloading. Provides filesystem and GitHub-base
 
 ## Installation
 
+Part of the exo-ai monorepo:
+
 ```bash
-pip install exo-skills
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
 ## Module Path

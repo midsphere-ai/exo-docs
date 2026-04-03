@@ -4,11 +4,17 @@ Training framework with trajectory capture, data synthesis, evolution pipelines,
 
 ## Installation
 
-```bash
-pip install exo-train
+Part of the exo-ai monorepo:
 
-# For VeRL integration:
-pip install exo-train[verl]
+```bash
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
+```
+
+For VeRL integration, install the extra from the `packages/exo-train` directory:
+
+```bash
+uv sync --extra verl
 ```
 
 ## Module path

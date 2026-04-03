@@ -8,7 +8,7 @@ Follow these pages in order for the best experience:
 
 ### 1. [Installation](installation.md)
 
-Set up Exo in your project. Covers `pip install`, UV workspace development, Python version requirements, and environment variables for LLM providers.
+Set up Exo in your project. Covers git-based installation, UV workspace development, Python version requirements, and environment variables for LLM providers.
 
 ### 2. [Quickstart](quickstart.md)
 

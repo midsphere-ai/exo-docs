@@ -4,8 +4,11 @@ Pluggable security guardrails for Exo agents -- pattern-based and LLM-based prom
 
 ## Installation
 
+Part of the exo-ai monorepo:
+
 ```bash
-pip install exo-guardrail
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
 ## Module Path

@@ -4,15 +4,18 @@ Unified observability for Exo agents: structured logging, distributed tracing, m
 
 ## Installation
 
+Part of the exo-ai monorepo:
+
 ```bash
-pip install exo-observability
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
-Optional dependencies for OpenTelemetry integration:
+Optional dependencies for OpenTelemetry integration can be enabled with extras from the `packages/exo-observability` directory:
 
 ```bash
-pip install "exo-observability[otel]"   # OTel API + SDK
-pip install "exo-observability[otlp]"   # OTLP exporter
+uv sync --extra otel    # OTel API + SDK
+uv sync --extra otlp    # OTLP exporter
 ```
 
 ## Module Path

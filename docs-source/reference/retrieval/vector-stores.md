@@ -133,10 +133,11 @@ class ChromaVectorStore(VectorStore)
 
 ChromaDB vector store for local persistent or ephemeral vector search. Wraps the ChromaDB `Collection` API for similarity search using cosine distance.
 
-Requires the `chromadb` package:
+Requires the `chromadb` package, included via the `chroma` extra:
 
 ```bash
-pip install exo-retrieval[chroma]
+# From the exo-ai monorepo root or packages/exo-retrieval directory
+uv sync --extra chroma
 ```
 
 ### Constructor parameters
@@ -178,10 +179,11 @@ class PgVectorStore(VectorStore)
 
 PostgreSQL vector store using the pgvector extension. Uses `asyncpg` for async PostgreSQL access and the `<=>` cosine distance operator for similarity search.
 
-Requires the `asyncpg` package:
+Requires the `asyncpg` package, included via the `pgvector` extra:
 
 ```bash
-pip install exo-retrieval[pgvector]
+# From the exo-ai monorepo root or packages/exo-retrieval directory
+uv sync --extra pgvector
 ```
 
 ### Constructor parameters

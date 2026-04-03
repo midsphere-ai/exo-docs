@@ -11,7 +11,7 @@ from exo.train.verl import (
 )
 ```
 
-**Requires:** `pip install exo-train[verl]`
+**Requires:** Included in the exo-ai monorepo. Install the VeRL extra with `uv sync --extra verl` from the `packages/exo-train` directory.
 
 ---
 

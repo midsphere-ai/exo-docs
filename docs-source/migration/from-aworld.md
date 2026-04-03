@@ -403,7 +403,7 @@ agent = Agent(
 
 Use this checklist to track your migration progress:
 
-- [ ] **Install Exo packages** -- `pip install exo` or individual packages
+- [ ] **Install Exo packages** -- `git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai && uv sync`
 - [ ] **Update imports** -- Replace `aworld.*` imports with `exo.*` equivalents (see table above)
 - [ ] **Migrate agent definitions** -- Replace agent subclasses with single `Agent` class
 - [ ] **Migrate tool definitions** -- Replace `BaseTool`/`AsyncBaseTool`/`FunctionTool` with `@tool` decorator or `Tool` ABC

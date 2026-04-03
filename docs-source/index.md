@@ -7,8 +7,8 @@ Exo is the next-generation rewrite of [AWorld](https://github.com/inclusionAI/AW
 ## Install
 
 ```bash
-pip install exo            # everything
-pip install exo-core       # minimal: agent, tools, runner, swarm
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
 Requires Python 3.11+.
@@ -92,7 +92,7 @@ Exo is organized as a UV workspace monorepo with 13 packages:
 
 ### Getting Started
 
-- **[Installation](getting-started/installation.md)** -- pip install, UV workspace, environment variables
+- **[Installation](getting-started/installation.md)** -- git clone, uv sync, environment variables
 - **[Quickstart](getting-started/quickstart.md)** -- build and run your first agent in 5 minutes
 - **[Core Concepts](getting-started/concepts.md)** -- Agent, Tool, Runner, Swarm, messages, hooks, events
 - **[Your First Agent](getting-started/first-agent.md)** -- step-by-step multi-agent tutorial

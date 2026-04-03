@@ -4,8 +4,11 @@ OpenTelemetry-based observability for Exo agents and tools.
 
 ## Installation
 
+Part of the exo-ai monorepo:
+
 ```bash
-pip install exo-trace
+git clone https://github.com/Midsphere-AI/exo-ai.git && cd exo-ai
+uv sync
 ```
 
 ## Module path

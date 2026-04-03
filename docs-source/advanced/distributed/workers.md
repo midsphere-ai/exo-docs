@@ -6,8 +6,8 @@ This guide covers configuring, deploying, and scaling distributed workers for `e
 
 - **Redis 7+** — Required for Redis Streams with consumer groups
 - **Python 3.11+** — Required by exo packages
-- **exo-distributed** — `pip install exo-distributed`
-- **exo-cli** (optional) — `pip install exo-cli` for the `exo` command
+- **exo-distributed** — included in the exo-ai monorepo
+- **exo-cli** (optional) — included in the exo-ai monorepo, provides the `exo` command
 
 ## Starting a Worker
 
@@ -126,7 +126,7 @@ handle = await distributed(
 4. Loads prior conversation history from the store and prepends it to the message list
 5. Tears down the store in the `finally` block (even on failure)
 
-This requires the `exo-memory` package: `pip install exo-distributed[memory]`.
+This requires the `exo-memory` package, which is included in the exo-ai monorepo. Install the memory extra with `uv sync --extra memory` from the `exo-distributed` package directory.
 
 ## Environment Variables
 
@@ -309,7 +309,7 @@ For tasks that must survive worker crashes, use the Temporal execution backend. 
 **Requirements:**
 
 - Temporal server running
-- `temporalio` installed: `pip install exo-distributed[temporal]`
+- `temporalio` installed: run `uv sync --extra temporal` from the `exo-distributed` package directory
 
 ```bash
 TEMPORAL_HOST=localhost:7233 \
@@ -394,8 +394,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install exo packages
-RUN pip install exo-distributed exo-cli
+# Install exo packages from git
+RUN pip install "exo-distributed @ git+https://github.com/Midsphere-AI/exo-ai.git#subdirectory=packages/exo-distributed" \
+    "exo-cli @ git+https://github.com/Midsphere-AI/exo-ai.git#subdirectory=packages/exo-cli"
 
 # Copy application code (for tool resolution via importable paths)
 COPY . .
